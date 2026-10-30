@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Guía Unidades Físicas y Químicas de Concentración 10° | Faro de Luz</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase Compat SDK v9.23.0 (Idéntico a docente.html) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Three.js para visores 3D -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- QRious para código QR institucional -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <!-- jsPDF para reporte PDF oficial -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            navy: { 900: '#081b38', 800: '#0f2b54', 700: '#163b73' },
+            gold: { 500: '#c89d28', 400: '#dfb235', 300: '#f3cc56' }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      box-sizing: border-box;
+    }
+    textarea, input, select {
+      font-size: 16px !important;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+    body {
+      background: radial-gradient(circle at top right, #0f2b54 0%, #081b38 65%, #051024 100%);
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(15, 43, 84, 0.68);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(200, 157, 40, 0.28);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .glass-sub {
+      background: rgba(8, 27, 56, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #c89d28 0%, #dfb235 50%, #b38618 100%);
+    }
+    .option-btn, .unit-tab-btn {
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .option-btn:hover:not(:disabled), .unit-tab-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(223, 178, 53, 0.7);
+    }
+    .option-btn.selected, .unit-tab-btn.active-tab {
+      background: linear-gradient(135deg, rgba(200, 157, 40, 0.32), rgba(5, 150, 105, 0.28));
+      border-color: #dfb235 !important;
+      box-shadow: 0 0 18px rgba(223, 178, 53, 0.3);
+    }
+    #particlesCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .fade-step {
+      animation: fadeStep 0.35s ease-out forwards;
+    }
+    @keyframes fadeStep {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .pulse-dot {
+      animation: pulseDot 1.6s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.55; }
+    }
+  </style>
+</head>
+<body class="relative antialiased selection:bg-gold-500 selection:text-navy-900">
+
+  <!-- Fondo Ambiental de Partículas -->
+  <canvas id="particlesCanvas"></canvas>
+
+  <!-- FRANJA SUPERIOR DE SEGURIDAD Y CONEXIÓN CON DOCENTE.HTML -->
+  <header class="sticky top-0 z-40 bg-navy-900/95 backdrop-blur-md border-b border-gold-500/30 px-3 py-2 shadow-lg">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div id="focusRuleBadge" class="flex items-center gap-2 bg-red-950/70 border border-red-500/40 px-3 py-1 rounded-full text-xs font-semibold text-red-200">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-dot"></span>
+          <span id="focusRuleText">Antifraude Activo (-0.5 pts)</span>
+        </div>
+        <div id="telemetryBadge" class="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-1 rounded-full text-xs text-emerald-300 font-medium">
+          <span id="telemetryDot" class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+          <span id="telemetryText">Consola Docente: CONECTADA</span>
+        </div>
+        <div id="scheduleTopBadge" class="hidden md:flex items-center gap-1.5 bg-cyan-950/80 border border-cyan-500/30 px-2.5 py-1 rounded-full text-[11px] text-cyan-300 font-mono">
+          <span>📅 30 Nov | Sec. I: 7:00-7:40 AM | Sec. II: 7:40-8:25 AM</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Sonómetro -->
+        <div class="hidden sm:flex items-center gap-2 bg-navy-800/90 border border-white/10 px-3 py-1 rounded-full text-xs">
+          <span class="text-gold-400">🎤</span>
+          <div class="w-20 h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="noiseBarHeader" class="h-full bg-emerald-500 transition-all duration-150" style="width: 8%;"></div>
+          </div>
+          <span id="noisePctHeader" class="font-mono text-[11px] text-slate-300">8%</span>
+        </div>
+
+        <!-- Faltas -->
+        <div class="bg-amber-950/70 border border-amber-500/40 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-300">
+          Faltas: <span id="headerPenaltiesCount">0</span> (<span id="headerPenaltiesPts">-0.0</span>)
+        </div>
+
+        <!-- Reloj -->
+        <div id="liveClockDisplay" class="font-mono text-xs sm:text-sm bg-navy-800 border border-gold-500/30 px-2.5 py-1 rounded-lg text-gold-300 font-semibold">
+          00:00:00
+        </div>
+
+        <!-- Acceso Docente -->
+        <button id="openTeacherBtn" onclick="openTeacherModal()" class="gold-gradient text-navy-900 font-extrabold text-xs sm:text-sm px-3 py-1.5 rounded-lg shadow-md hover:brightness-110 active:scale-95 transition flex items-center gap-1">
+          <span>🔐 Docente</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="relative z-10 max-w-6xl mx-auto px-4 py-6 sm:py-8">
+
+    <!-- BANNER INSTITUCIONAL OFICIAL EN FORMATO PNG -->
+    <div class="glass-card rounded-2xl p-2 sm:p-3 mb-6 overflow-hidden">
+      <img id="mainBannerImg" src="banner_faro.png" alt="Banner Institucional Gimnasio Cristiano Faro de Luz" class="w-full h-auto rounded-xl object-cover max-h-44" onerror="this.src=generateOfficialBannerDataURL()" />
+    </div>
+
+    <!-- ==================== PANTALLA 1: BIENVENIDA Y CONTROL DE HORARIO (30 NOVIEMBRE) ==================== -->
+    <section id="welcomeScreen" class="glass-card rounded-3xl p-6 sm:p-8 fade-step">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gold-500/20 text-gold-300 border border-gold-400/30">
+            ⚗️ Química • Grado 10° • Guía Teórico-Práctica Monitorizada
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-2 tracking-tight">
+            GUÍA UNIDADES FÍSICAS Y QUÍMICAS DE CONCENTRACIÓN 10°
+          </h1>
+          <p class="text-slate-300 text-sm sm:text-base mt-1">
+            Docente: <strong class="text-gold-300">Cristian David Ayazo</strong> | Gimnasio Cristiano Faro de Luz
+          </p>
+        </div>
+        <div class="glass-sub rounded-2xl p-3.5 text-right shrink-0 border border-gold-500/30">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Programación Oficial</div>
+          <div class="text-sm font-extrabold text-gold-300">30 de Noviembre • 07:00 AM - 08:25 AM</div>
+          <div class="text-xs text-emerald-400 font-medium">Sección I (7:00-7:40) • Sección II (7:40-8:25)</div>
+          <div id="welcomeScheduleStatus" class="text-[11px] text-cyan-300 mt-1 font-mono">Verificando reloj del dispositivo...</div>
+        </div>
+      </div>
+
+      <!-- Resumen de las 10 Unidades de Concentración -->
+      <div class="mt-6">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-gold-400 mb-3">
+          📚 Contenido de la Guía (10 Unidades con Fórmulas, Aplicabilidad, Ejemplo Resuelto y Láminas PNG HD)
+        </h2>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-gold-300">1. % m/m</strong><p class="text-slate-300 mt-0.5">Porcentaje masa a masa</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-gold-300">2. % v/v</strong><p class="text-slate-300 mt-0.5">Porcentaje volumen a volumen</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-gold-300">3. % m/v</strong><p class="text-slate-300 mt-0.5">Porcentaje masa a volumen</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-cyan-300">4. ppm</strong><p class="text-slate-300 mt-0.5">Partes por millón (mg/L)</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-cyan-300">5. ppb</strong><p class="text-slate-300 mt-0.5">Partes por billón (μg/L)</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-emerald-300">6. Densidad (ρ)</strong><p class="text-slate-300 mt-0.5">Conversión masa-volumen</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-purple-300">7. Molaridad (M)</strong><p class="text-slate-300 mt-0.5">Moles de soluto / L solución</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-purple-300">8. Molalidad (m)</strong><p class="text-slate-300 mt-0.5">Moles de soluto / kg solvente</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-amber-300">9. Eq-gramo (eq-g)</strong><p class="text-slate-300 mt-0.5">Masa equivalente y factor θ</p></div>
+          <div class="glass-sub p-3 rounded-xl border border-white/10"><strong class="text-amber-300">10. Normalidad (N)</strong><p class="text-slate-300 mt-0.5">eq-g de soluto / L solución</p></div>
+        </div>
+      </div>
+
+      <!-- Cronograma Obligatorio de Dos Secciones -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div class="bg-navy-900/85 border border-cyan-500/40 rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-cyan-300 font-extrabold text-xs uppercase tracking-wider">📖 SECCIÓN I: FUNDAMENTACIÓN Y EJEMPLOS RESUELTOS</span>
+            <span class="bg-cyan-500/20 text-cyan-200 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold">07:00 AM - 07:40 AM</span>
+          </div>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Estudio interactivo de las 10 unidades de concentración con definiciones, fórmulas, ejemplos industriales/clínicos, ejercicios resueltos paso a paso, calculadora de verificación y láminas PNG/3D. <strong>Bloqueo activo: no podrás pasar a la Sección II hasta las 07:40 AM (o finalizados los 40 min).</strong>
+          </p>
+        </div>
+
+        <div class="bg-navy-900/85 border border-gold-500/40 rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gold-300 font-extrabold text-xs uppercase tracking-wider">✍️ SECCIÓN II: TALLER EVALUATIVO CALIFICABLE</span>
+            <span class="bg-gold-500/20 text-gold-200 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold">07:40 AM - 08:25 AM</span>
+          </div>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Resolución de <strong>10 ejercicios prácticos (8 cerrados + 2 abiertos de desarrollo analítico = 5.00 puntos)</strong>. Con sonómetro al 60%, bloqueo de pestañas y supervisión en vivo desde <code>docente.html</code>. Auto-entrega a las 08:25 AM.
+          </p>
+        </div>
+      </div>
+
+      <!-- Registro del Estudiante -->
+      <div class="mt-7 bg-navy-900/90 border border-gold-500/40 rounded-2xl p-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div class="md:col-span-2">
+            <label for="studentNameInput" class="block text-xs font-bold uppercase tracking-wider text-gold-300 mb-2">
+              Nombre y Apellidos Completos del Estudiante *
+            </label>
+            <input
+              id="studentNameInput"
+              type="text"
+              autocomplete="off"
+              placeholder="Ej: Samuel David Hernández"
+              oninput="validateStudentForm()"
+              class="w-full bg-navy-800/90 border border-white/20 focus:border-gold-400 rounded-xl px-4 py-3 text-white font-semibold placeholder-slate-500 outline-none transition"
+            />
+          </div>
+          <div>
+            <label for="studentCourseSelect" class="block text-xs font-bold uppercase tracking-wider text-gold-300 mb-2">
+              Curso / Grado *
+            </label>
+            <select
+              id="studentCourseSelect"
+              class="w-full bg-navy-800/90 border border-white/20 focus:border-gold-400 rounded-xl px-4 py-3 text-white font-semibold outline-none transition"
+            >
+              <option value="10°A">10°A</option>
+              <option value="10°B">10°B</option>
+              <option value="10°">10° Único</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p id="welcomeValidationMsg" class="text-xs text-amber-300 font-medium">
+            ⚠️ Ingresa tu nombre y apellido completos para enlazar con la Consola Maestra.
+          </p>
+          <button
+            id="startExamBtn"
+            disabled
+            onclick="attemptStartActivity()"
+            class="w-full sm:w-auto gold-gradient text-navy-900 font-extrabold px-7 py-3.5 rounded-xl shadow-lg opacity-50 cursor-not-allowed transition transform active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>Ingresar a la Sección I (Guía Teórica)</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 2A: SECCIÓN I - GUÍA DE ESTUDIO INTERACTIVA (7:00 - 7:40 AM) ==================== -->
+    <section id="section1TheoryScreen" class="hidden space-y-5 fade-step">
+      <!-- Barra Superior de Progreso y Temporizador de la Sección I -->
+      <div class="glass-card rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
+              📖 SECCIÓN I • FUNDAMENTACIÓN TEÓRICA Y EJERCICIOS MODELO (7:00 - 7:40 AM)
+            </span>
+            <span id="unitsReadBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              Unidades estudiadas: 1 / 10
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-navy-900 border border-gold-500/40 px-3.5 py-1.5 rounded-xl">
+              <span class="text-xs text-slate-300 font-medium">⏳ Tiempo para habilitar Sección II (7:40 AM):</span>
+              <span id="section1TimerDisplay" class="font-mono text-base font-extrabold text-gold-300">40:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botonera de las 10 Unidades -->
+        <div class="mt-4">
+          <div class="text-xs text-slate-300 mb-2 font-semibold">
+            Selecciona cada una de las 10 unidades para estudiar su definición, fórmula, aplicabilidad y ejercicio resuelto:
+          </div>
+          <div id="unitTabsContainer" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+        </div>
+      </div>
+
+      <!-- Contenido Detallado de la Unidad Seleccionada -->
+      <div class="glass-card rounded-3xl p-5 sm:p-7 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-4">
+          <div>
+            <span id="unitCategoryBadge" class="text-xs font-bold uppercase tracking-wider text-cyan-400">Unidad Física de Concentración</span>
+            <h2 id="unitTitleHeading" class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">1. Porcentaje Masa a Masa (% m/m)</h2>
+          </div>
+          <span id="unitReadCheckBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+            ✓ Unidad Registrada
+          </span>
+        </div>
+
+        <!-- Grid: Lámina PNG HD / Visor 3D + Definición y Fórmula -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <!-- Soporte Visual PNG HD / 3D -->
+          <div class="lg:col-span-5">
+            <div class="glass-sub rounded-2xl p-3 border border-gold-500/25">
+              <div class="flex items-center justify-between text-[11px] text-gold-300 font-semibold mb-2 px-1">
+                <span id="theoryVisualCaption">🔬 Lámina Científica PNG HD</span>
+                <span id="theoryVisualBadge" class="bg-gold-500/20 px-2 py-0.5 rounded text-[10px]">PNG HD</span>
+              </div>
+              <div id="theoryThreeContainer" class="hidden w-full h-64 rounded-xl bg-navy-900/90 relative overflow-hidden cursor-grab active:cursor-grabbing border border-white/10">
+                <div class="absolute bottom-2 right-2 z-10 bg-navy-900/80 text-[10px] text-slate-300 px-2 py-0.5 rounded pointer-events-none">
+                  Arrastra para rotar 360°
+                </div>
+              </div>
+              <div id="theoryPngContainer" class="w-full min-h-[230px] flex flex-col items-center justify-center bg-navy-900/95 rounded-xl p-1.5 border border-white/10">
+                <img
+                  id="theoryPlateImg"
+                  src=""
+                  alt="Lámina Científica Unidad de Concentración"
+                  onclick="openImageZoomModal(this.src, document.getElementById('unitTitleHeading').textContent)"
+                  class="w-full h-auto max-h-64 rounded-lg object-contain cursor-zoom-in shadow-md"
+                />
+                <span class="mt-1.5 text-[10px] text-cyan-300/80 font-mono">🔍 Toca la imagen PNG para ampliar en alta resolución</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Definición, Fórmula y Aplicabilidad -->
+          <div class="lg:col-span-7 space-y-4">
+            <!-- 1. Definición Conceptual -->
+            <div class="glass-sub rounded-2xl p-4 border-l-4 border-l-cyan-400">
+              <div class="text-xs font-extrabold uppercase text-cyan-300 mb-1">📘 1. Definición Conceptual y Principio Químico</div>
+              <p id="unitDefinitionText" class="text-sm text-slate-200 leading-relaxed text-justify"></p>
+            </div>
+
+            <!-- 2. Ecuación / Fórmula Matemática -->
+            <div class="bg-navy-900/95 border-2 border-gold-500/40 rounded-2xl p-4 text-center shadow-inner">
+              <div class="text-[11px] font-bold uppercase text-gold-300 tracking-wider">📐 2. Fórmula Matemática Oficial y Unidades</div>
+              <div id="unitFormulaBox" class="font-mono text-base sm:text-lg font-extrabold text-white mt-2 py-2 px-3 bg-navy-800/90 rounded-xl border border-white/10"></div>
+              <div id="unitVariablesLegend" class="text-xs text-slate-300 mt-2 font-medium"></div>
+            </div>
+
+            <!-- 3. Ejemplo de Aplicabilidad Real -->
+            <div class="glass-sub rounded-2xl p-4 border-l-4 border-l-emerald-400">
+              <div class="text-xs font-extrabold uppercase text-emerald-300 mb-1">🏭 3. Aplicabilidad en la Industria, Medicina y Vida Cotidiana</div>
+              <p id="unitApplicabilityText" class="text-sm text-slate-200 leading-relaxed text-justify"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Ejercicio Resuelto Paso a Paso -->
+        <div class="bg-navy-900/90 border border-gold-400/30 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-extrabold uppercase text-gold-300">🧮 4. Ejercicio Modelo Resuelto Paso a Paso</span>
+            <span class="text-[11px] font-mono text-cyan-300 bg-cyan-950/80 px-2.5 py-0.5 rounded border border-cyan-500/30">Metodología Factor de Conversión / Fórmula</span>
+          </div>
+          <p id="unitSolvedProblemStatement" class="text-sm font-bold text-white bg-navy-800/90 p-3.5 rounded-xl border border-white/10"></p>
+          <div id="unitSolvedStepsBox" class="text-xs sm:text-sm text-slate-200 space-y-2 font-mono bg-black/30 p-4 rounded-xl border border-white/10 leading-relaxed whitespace-pre-line"></div>
+        </div>
+
+        <!-- Pie de Navegación de la Sección I -->
+        <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button onclick="navigateUnitTab(-1)" class="bg-navy-800 hover:bg-navy-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs border border-white/15 transition">
+              ← Unidad Anterior
+            </button>
+            <button onclick="navigateUnitTab(1)" class="bg-navy-800 hover:bg-navy-700 text-gold-300 font-bold px-4 py-2.5 rounded-xl text-xs border border-gold-500/30 transition">
+              Siguiente Unidad →
+            </button>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <span id="section1LockBanner" class="text-xs text-amber-300 font-medium text-center sm:text-right">
+              🔒 Explora las 10 unidades y espera a las 7:40 AM para pasar a la Sección II.
+            </span>
+            <button
+              id="goToSection2Btn"
+              disabled
+              onclick="startSection2Exercises()"
+              class="w-full sm:w-auto gold-gradient text-navy-900 font-extrabold px-6 py-3.5 rounded-xl shadow-lg opacity-40 cursor-not-allowed transition flex items-center justify-center gap-2"
+            >
+              <span>Iniciar Sección II: Taller Evaluativo (7:40 AM)</span>
+              <span>➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 2B: SECCIÓN II - EJERCICIOS PARA RESOLVER (7:40 - 8:25 AM) ==================== -->
+    <section id="examScreen" class="hidden space-y-5 fade-step">
+      <div class="glass-card rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <span id="questionPartBadge" class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-gold-500/20 text-gold-300 border border-gold-400/40">
+              Sección II • Ejercicio Práctico
+            </span>
+            <span id="questionCompetencyBadge" class="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+              Resolución de Problemas Estequiométricos
+            </span>
+            <span id="questionPointsBadge" class="text-xs font-mono text-emerald-300 font-bold">
+              Valor: 0.463 pts
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <div class="bg-navy-900 border border-cyan-500/40 px-3 py-1.5 rounded-xl text-xs font-mono text-cyan-300">
+              Cierre 8:25 AM: <span id="section2GlobalRemaining">--:--</span>
+            </div>
+            <div id="timerBox" class="flex items-center gap-2 bg-navy-900 border border-gold-500/40 px-3.5 py-1.5 rounded-xl">
+              <span class="text-xs text-slate-300 font-medium">⏱️ Bloqueo Ejercicio:</span>
+              <span id="questionTimerDisplay" class="font-mono text-base font-extrabold text-gold-300">01:30</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="flex justify-between text-xs text-slate-300 mb-1.5 font-semibold">
+            <span id="progressTextLabel">Ejercicio 1 de 10</span>
+            <span id="progressPercentLabel">10% completado</span>
+          </div>
+          <div class="w-full h-2.5 bg-navy-900 rounded-full overflow-hidden border border-white/10">
+            <div id="examProgressBar" class="h-full gold-gradient transition-all duration-300" style="width: 10%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuerpo del Ejercicio -->
+      <div class="glass-card rounded-3xl p-5 sm:p-7 space-y-6">
+        <div class="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
+          <div>
+            <div id="questionTopicLabel" class="text-xs font-bold uppercase tracking-wider text-gold-400">
+              Unidad Evaluada
+            </div>
+            <h2 id="questionTitleLabel" class="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+              Ejercicio #1
+            </h2>
+          </div>
+          <div class="text-right text-xs text-slate-400 font-mono">
+            Estudiante: <span id="activeStudentNameLabel" class="text-white font-semibold"></span>
+          </div>
+        </div>
+
+        <!-- Soporte Visual: Visor 3D Three.js o Lámina Científica en Formato PNG HD -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-5">
+            <div class="glass-sub rounded-2xl p-3 border border-gold-500/25 relative overflow-hidden">
+              <div class="flex items-center justify-between text-[11px] text-gold-300 font-semibold mb-2 px-1">
+                <span id="visualCaptionTitle">🔬 Lámina Científica HD</span>
+                <span id="visualBadgeType" class="bg-gold-500/20 px-2 py-0.5 rounded text-[10px]">PNG HD / 3D</span>
+              </div>
+
+              <div id="threeContainer" class="hidden w-full h-64 rounded-xl bg-navy-900/90 relative overflow-hidden cursor-grab active:cursor-grabbing border border-white/10">
+                <div class="absolute bottom-2 right-2 z-10 bg-navy-900/80 text-[10px] text-slate-300 px-2 py-0.5 rounded pointer-events-none">
+                  Arrastra para rotar 360°
+                </div>
+              </div>
+
+              <div id="pngPlateContainer" class="w-full min-h-[240px] flex flex-col items-center justify-center bg-navy-900/95 rounded-xl p-1.5 border border-white/10 relative group">
+                <img
+                  id="questionPlateImg"
+                  src=""
+                  alt="Lámina Científica del Ejercicio"
+                  onclick="openImageZoomModal(this.src, document.getElementById('visualCaptionTitle').textContent)"
+                  class="w-full h-auto max-h-64 rounded-lg object-contain cursor-zoom-in shadow-md transition duration-200 group-hover:brightness-105"
+                />
+                <span class="mt-1.5 text-[10px] text-cyan-300/80 font-mono">🔍 Toca la imagen PNG para ampliar en alta resolución</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-4">
+            <div class="glass-sub rounded-2xl p-4 sm:p-5 border-l-4 border-l-gold-400 text-slate-200 text-sm sm:text-[15px] leading-relaxed text-justify" id="questionContextBox"></div>
+            <div class="bg-navy-900/90 border border-white/15 rounded-2xl p-4 sm:p-5">
+              <p id="questionStemBox" class="text-white font-bold text-sm sm:text-base leading-snug"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opciones Cerradas -->
+        <div id="closedOptionsContainer" class="grid grid-cols-1 gap-3 pt-2"></div>
+
+        <!-- Respuesta Abierta (Desarrollo de Problemas) -->
+        <div id="openAnswerContainer" class="hidden space-y-3 pt-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="text-gold-300 font-bold uppercase">
+              ✍️ Desarrolla el procedimiento matemático y argumentación química (Mínimo 4 líneas / 28 palabras):
+            </span>
+            <span id="openMetricsBadge" class="font-mono px-2.5 py-1 rounded-lg bg-red-950/80 text-red-300 border border-red-500/30">
+              0 / 4 líneas | 0 / 28 palabras
+            </span>
+          </div>
+          <textarea
+            id="openAnswerTextarea"
+            rows="6"
+            placeholder="Escribe aquí los datos del problema, la fórmula seleccionada, el reemplazo paso a paso (moles, equivalentes-gramo, masa o volumen) y la respuesta final con sus unidades..."
+            oninput="handleOpenTextareaInput()"
+            class="w-full bg-navy-900/95 border-2 border-white/20 focus:border-gold-400 rounded-2xl p-4 text-white text-sm sm:text-base leading-relaxed outline-none transition resize-none"
+          ></textarea>
+          <p id="openValidationHint" class="text-xs text-amber-300">
+            Debes redactar al menos 4 líneas argumentadas (mínimo 28 palabras con los cálculos y unidades) y esperar a que el reloj llegue a 00:00.
+          </p>
+        </div>
+
+        <!-- Pie de Navegación -->
+        <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div id="lockReasonBanner" class="text-xs text-amber-300 font-medium flex items-center gap-2">
+            <span>🔒 Botón bloqueado: Debes esperar el tiempo reglamentario y resolver el ejercicio.</span>
+          </div>
+          <button
+            id="nextQuestionBtn"
+            disabled
+            onclick="advanceToNextQuestion(false)"
+            class="w-full sm:w-auto gold-gradient text-navy-900 font-extrabold px-7 py-3.5 rounded-xl shadow-lg opacity-40 cursor-not-allowed transition flex items-center justify-center gap-2"
+          >
+            <span id="nextQuestionBtnText">Siguiente Ejercicio</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PANTALLA 3: RESULTADOS FINALES, QR Y PDF ==================== -->
+    <section id="resultsScreen" class="hidden glass-card rounded-3xl p-6 sm:p-8 space-y-6 fade-step">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/10 pb-6">
+        <div>
+          <span class="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+            ✅ Guía y Taller Evaluativo Entregados en Consola Docente
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+            Reporte Oficial • Unidades de Concentración 10°
+          </h2>
+          <p id="resultStudentMeta" class="text-slate-300 text-sm mt-1"></p>
+        </div>
+
+        <div class="bg-navy-900 border-2 border-gold-400 rounded-2xl px-6 py-4 text-center shadow-xl">
+          <div class="text-xs font-bold uppercase text-gold-300">Nota Definitiva (0.00 - 5.00)</div>
+          <div id="finalGradeDisplay" class="text-4xl sm:text-5xl font-extrabold text-white mt-1">0.00</div>
+          <div id="finalPerformanceBadge" class="text-xs font-bold uppercase mt-1 text-emerald-400">Desempeño</div>
+        </div>
+      </div>
+
+      <!-- Resumen Estadístico -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="glass-sub p-4 rounded-2xl text-center">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Ejercicios Cerrados (3.70)</div>
+          <div id="resClosedScore" class="text-xl font-extrabold text-gold-300 mt-1">0.00 pts</div>
+          <div id="resClosedHits" class="text-xs text-slate-300 mt-0.5">0 / 8 aciertos</div>
+        </div>
+        <div class="glass-sub p-4 rounded-2xl text-center">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Problemas Abiertos (1.30)</div>
+          <div id="resOpenScore" class="text-xl font-extrabold text-cyan-300 mt-1">0.00 pts</div>
+          <div id="resOpenValid" class="text-xs text-slate-300 mt-0.5">0 / 2 completados</div>
+        </div>
+        <div class="glass-sub p-4 rounded-2xl text-center">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Penalizaciones</div>
+          <div id="resPenaltyDeduction" class="text-xl font-extrabold text-red-400 mt-1">-0.00 pts</div>
+          <div id="resPenaltyCount" class="text-xs text-slate-300 mt-0.5">0 incidencias</div>
+        </div>
+        <div class="glass-sub p-4 rounded-2xl text-center">
+          <div class="text-xs text-slate-400 uppercase font-semibold">Tiempo Empleado</div>
+          <div id="resTotalTime" class="text-xl font-extrabold text-emerald-300 mt-1">00m 00s</div>
+          <div class="text-xs text-slate-300 mt-0.5">F-GA2-004 V2</div>
+        </div>
+      </div>
+
+      <!-- Código QR y Descarga de PDF -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center bg-navy-900/80 border border-gold-500/30 rounded-2xl p-5">
+        <div class="flex flex-col items-center justify-center bg-white p-4 rounded-2xl shadow-inner">
+          <canvas id="qrCanvas" class="w-40 h-40"></canvas>
+          <span class="text-[11px] font-bold text-navy-900 mt-2 uppercase tracking-wider">Verificación QR Oficial</span>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <h3 class="text-lg font-extrabold text-gold-300">
+            Certificado Académico y Respaldo en PDF (Con Fórmulas y Láminas PNG)
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Tus resultados ya fueron registrados en la pestaña <strong>📊 3. Exámenes Entregados</strong> de la Consola Maestra. Descarga tu reporte PDF oficial con el resumen de la guía y tus respuestas del taller.
+          </p>
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button
+              onclick="generateOfficialPDFReport()"
+              class="gold-gradient text-navy-900 font-extrabold px-6 py-3.5 rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition flex items-center gap-2"
+            >
+              <span>📥 Descargar Reporte PDF Completo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desglose en pantalla -->
+      <div class="space-y-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-gold-400">
+          Resumen Detallado de Ejercicios Resueltos
+        </h3>
+        <div id="resultsBreakdownList" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL DE RESTRICCIÓN DE HORARIO (30 NOVIEMBRE 7:00 - 8:25 AM) ==================== -->
+  <div id="scheduleLockModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 text-center border-2 border-gold-400 space-y-4 shadow-2xl">
+      <div class="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-400 flex items-center justify-center mx-auto text-2xl">
+        ⏰
+      </div>
+      <h3 class="text-lg font-extrabold text-gold-300 uppercase">Actividad Programada por Horario</h3>
+      <p id="scheduleLockModalText" class="text-xs sm:text-sm text-slate-200 leading-relaxed bg-navy-900/90 p-4 rounded-2xl border border-white/10"></p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <button
+          onclick="document.getElementById('scheduleLockModal').classList.add('hidden')"
+          class="flex-1 bg-navy-800 hover:bg-navy-700 text-slate-200 font-bold py-3 rounded-xl border border-white/15 text-xs sm:text-sm"
+        >
+          Cerrar
+        </button>
+        <button
+          onclick="document.getElementById('scheduleLockModal').classList.add('hidden'); openTeacherModal();"
+          class="flex-1 gold-gradient text-navy-900 font-extrabold py-3 rounded-xl shadow-lg text-xs sm:text-sm"
+        >
+          🔐 Autorización Docente
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL DE ZOOM PARA LÁMINAS PNG HD ==================== -->
+  <div id="imageZoomModal" onclick="this.classList.add('hidden')" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out">
+    <div class="max-w-4xl w-full bg-navy-900 border-2 border-gold-400/60 rounded-3xl p-4 shadow-2xl space-y-3" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <span id="zoomModalTitle" class="text-xs sm:text-sm font-extrabold text-gold-300 uppercase">Lámina Científica en Alta Definición (.PNG)</span>
+        <button onclick="document.getElementById('imageZoomModal').classList.add('hidden')" class="text-xs bg-red-600/80 hover:bg-red-500 text-white font-bold px-3 py-1 rounded-lg">✕ Cerrar</button>
+      </div>
+      <img id="zoomModalImg" src="" alt="Vista ampliada PNG" class="w-full h-auto max-h-[78vh] object-contain rounded-xl mx-auto" />
+    </div>
+  </div>
+
+  <!-- ==================== MODAL DE ADVERTENCIA ENVIADA POR EL DOCENTE EN VIVO ==================== -->
+  <div id="remoteWarningModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 text-center border-2 border-amber-400 space-y-4 shadow-2xl">
+      <div class="w-14 h-14 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center mx-auto text-2xl">
+        💬
+      </div>
+      <h3 class="text-lg font-extrabold text-amber-300 uppercase">Aviso en Vivo del Docente</h3>
+      <p id="remoteWarningText" class="text-sm sm:text-base text-white font-semibold leading-relaxed bg-navy-900/90 p-4 rounded-2xl border border-amber-500/30"></p>
+      <button
+        onclick="document.getElementById('remoteWarningModal').classList.add('hidden')"
+        class="w-full gold-gradient text-navy-900 font-extrabold py-3 rounded-xl shadow-lg"
+      >
+        Entendido, Continuar Actividad
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL BLOQUEANTE DE PANTALLA COMPLETA ==================== -->
+  <div id="fullscreenModal" class="fixed inset-0 z-50 hidden bg-navy-900/95 backdrop-blur-xl flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-3xl p-6 text-center border-2 border-red-500/60 space-y-4">
+      <div class="w-14 h-14 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center mx-auto text-2xl">
+        ⚠️
+      </div>
+      <h3 class="text-xl font-extrabold text-white">Modo Pantalla Completa Requerido</h3>
+      <p id="fullscreenModalMsg" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        Por protocolo académico del Gimnasio Cristiano Faro de Luz, debes permanecer en la ventana activa durante toda la guía y el taller evaluativo.
+      </p>
+      <button
+        onclick="resumeFullscreenMode()"
+        class="w-full gold-gradient text-navy-900 font-extrabold py-3.5 rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition"
+      >
+        Volver a Pantalla Completa y Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST DE ALERTA ANTIFRAUDE ==================== -->
+  <div id="securityToast" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-red-950/95 border-2 border-red-500 text-red-100 px-4 py-3.5 rounded-2xl shadow-2xl">
+    <div class="flex items-start gap-3">
+      <span class="text-xl">🚨</span>
+      <div>
+        <div id="securityToastTitle" class="font-extrabold text-xs uppercase tracking-wider text-red-300">Notificación de Seguridad</div>
+        <p id="securityToastDesc" class="text-xs mt-1 leading-snug"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL LOCAL DE ACCESO DOCENTE ==================== -->
+  <div id="teacherModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-3xl p-6 border-2 border-gold-400/60 space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-gold-400 font-extrabold text-base">🔐 Panel Maestro Docente</span>
+          <span class="text-[11px] bg-gold-500/20 text-gold-300 px-2 py-0.5 rounded font-mono">Profe Cristian Ayazo</span>
+        </div>
+        <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1">✕ Cerrar</button>
+      </div>
+
+      <div id="teacherLoginView" class="space-y-3">
+        <label class="block text-xs font-bold uppercase text-slate-300">
+          Ingresa la clave de autorización docente:
+        </label>
+        <input
+          id="teacherPasswordInput"
+          type="password"
+          placeholder="Clave maestra..."
+          onkeydown="if(event.key==='Enter') verifyTeacherPassword()"
+          class="w-full bg-navy-900 border border-white/20 focus:border-gold-400 rounded-xl px-4 py-3 text-white font-mono outline-none"
+        />
+        <p id="teacherAuthError" class="hidden text-xs text-red-400 font-semibold">
+          ❌ Clave incorrecta. Intenta nuevamente.
+        </p>
+        <button
+          onclick="verifyTeacherPassword()"
+          class="w-full gold-gradient text-navy-900 font-extrabold py-3 rounded-xl shadow hover:brightness-110 transition"
+        >
+          Desbloquear Controles Docentes
+        </button>
+      </div>
+
+      <div id="teacherControlsView" class="hidden space-y-3">
+        <button onclick="teacherActionUnlockNow()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm text-left flex items-center justify-between transition">
+          <span>1. Ingresar Ahora (Omitir Horario 30 Nov) / Desbloquear Reloj (00:00)</span>
+          <span>⚡</span>
+        </button>
+        <button onclick="teacherActionNextQuestion()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm text-left flex items-center justify-between transition">
+          <span>2. Pasar a Sección II (Taller) / Avanzar al Siguiente Ejercicio</span>
+          <span>⏭️</span>
+        </button>
+        <button onclick="teacherActionJumpToOpen()" class="w-full bg-amber-600 hover:bg-amber-500 text-navy-900 font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm text-left flex items-center justify-between transition">
+          <span>3. Saltar a Problemas Abiertos (#9) / Concluir Abiertas</span>
+          <span>✍️</span>
+        </button>
+        <button onclick="teacherActionForceFinish()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm text-left flex items-center justify-between transition">
+          <span>4. Finalizar por Completo la Actividad y Entregar</span>
+          <span>🛑</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LÓGICA INTEGRAL SINCRONIZADA CON DOCENTE.HTML ==================== -->
+  <script>
+    /*************************************************************************
+     * 1. CONFIGURACIÓN EXACTA PARA CENTRO DE CONTROL REMOTO • FARO DE LUZ
+     *************************************************************************/
+    const EXAM_CONFIG = {
+      institution: "GIMNASIO CRISTIANO FARO DE LUZ",
+      teacher: "Cristian David Ayazo",
+      subject: "Química",
+      grade: "10°",
+      // DATOS OFICIALES DE REGISTRO EN DOCENTE.HTML:
+      examId: "guia_concentracion_quimica_10",
+      examTitle: "GUÍA UNIDADES FISICAS Y QUIMICAS DE CONCENTRACION 10°",
+      firebaseUrl: "https://faro-luz-evaluaciones-default-rtdb.firebaseio.com/",
+      // Programación Horaria Oficial: 30 de Noviembre (7:00 AM a 7:40 AM Sección I | 7:40 AM a 8:25 AM Sección II)
+      scheduleEnabled: true,
+      targetMonth: 10, // Noviembre (0-indexado en JS: Enero=0 ... Noviembre=10)
+      targetDay: 30,
+      sec1StartMinutes: 7 * 60 + 0,   // 07:00 AM (420 min)
+      sec1EndMinutes: 7 * 60 + 40,    // 07:40 AM (460 min) -> Fin Sección I / Inicio Sección II
+      sec2EndMinutes: 8 * 60 + 25,    // 08:25 AM (505 min) -> Cierre definitivo y auto-envío
+      sec1DefaultDurationSec: 40 * 60, // 40 minutos para Sección I
+      closedCount: 8,
+      openCount: 2,
+      closedTotalPoints: 3.70,
+      openTotalPoints: 1.30,
+      closedTimeSeconds: 90,   // 1.5 minutos por ejercicio cerrado
+      openTimeSeconds: 600,    // 10 minutos por ejercicio abierto
+      penaltyPoints: 0.50,
+      defaultNoiseThreshold: 60
+    };
+
+    // Inicializar Firebase Realtime Database
+    let db = null;
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp({ databaseURL: EXAM_CONFIG.firebaseUrl });
+      }
+      db = firebase.database();
+      // Auto-registrar en `registeredExams` con el nombre exacto solicitado
+      db.ref(`registeredExams/${EXAM_CONFIG.examId}`).update({
+        id: EXAM_CONFIG.examId,
+        title: EXAM_CONFIG.examTitle,
+        timestamp: Date.now()
+      }).catch(() => {});
+    } catch (e) {
+      console.warn("Modo local sin conexión Firebase:", e);
+    }
+
+    /*************************************************************************
+     * 2. BASE DE CONOCIMIENTO SECCIÓN I: LAS 10 UNIDADES DE CONCENTRACIÓN
+     *    (Definición, Fórmula, Aplicabilidad, Ejercicio Resuelto y Lámina PNG)
+     *************************************************************************/
+    const CONCENTRATION_UNITS_GUIDE = [
+      {
+        num: 1,
+        shortName: "1. % m/m",
+        category: "Unidad Física de Concentración",
+        title: "1. Porcentaje Masa a Masa (% m/m o % p/p)",
+        visualType: "PNG_PHYSICAL_UNITS",
+        visualCaption: "Lámina PNG: Proporción másica soluto/solución en aleaciones y fármacos",
+        definition: "El porcentaje masa a masa (% m/m) expresa los gramos de soluto puros que se encuentran disueltos por cada 100 gramos de solución total. Dado que la masa no varía con la dilatación térmica, es una unidad independiente de la temperatura. La masa total de la solución siempre es la suma aditiva de la masa del soluto más la masa del solvente.",
+        formula: "% m/m = ( Masa de soluto (g) / Masa de solución (g) ) × 100",
+        variables: "Donde: Masa de solución (g) = Masa de soluto (g) + Masa de solvente (g)",
+        applicability: "Se emplea ampliamente en la industria farmacéutica para formular cremas dermatológicas y ungüentos (ej. hidrocortisona al 1% m/m), en metalurgia para especificar la pureza de aleaciones sólidas (como el acero inoxidable o el oro de 18 quilates al 75% m/m) y en soluciones salinas hospitalarias.",
+        problem: "Ejercicio Modelo 1: Se disuelven 25 g de cloruro de potasio (KCl) en 175 g de agua destilada (H₂O). ¿Cuál es la concentración en % m/m de la solución resultante?",
+        steps: "Paso 1 (Identificar datos): Masa de soluto (KCl) = 25 g | Masa de solvente (H₂O) = 175 g.\nPaso 2 (Calcular masa total de la solución): m_solución = 25 g + 175 g = 200 g de solución.\nPaso 3 (Sustituir en la fórmula): % m/m = (25 g / 200 g) × 100 = 0,125 × 100 = 12,5 % m/m.\nRespuesta: La concentración es del 12,5 % m/m (hay 12,5 g de KCl por cada 100 g de solución)."
+      },
+      {
+        num: 2,
+        shortName: "2. % v/v",
+        category: "Unidad Física de Concentración",
+        title: "2. Porcentaje Volumen a Volumen (% v/v)",
+        visualType: "PNG_PHYSICAL_UNITS",
+        visualCaption: "Lámina PNG: Mezclas líquidas miscibles y grados alcohólicos",
+        definition: "El porcentaje volumen a volumen (% v/v) indica los mililitros (mL) de soluto líquido que están contenidos en cada 100 mililitros (mL) de solución total. Se aplica fundamentalmente en mezclas líquidas miscibles (líquido-líquido) y mezclas gaseosas. Tanto el soluto como la solución deben expresarse en la misma unidad volumétrica (mL o L).",
+        formula: "% v/v = ( Volumen de soluto (mL) / Volumen de solución (mL) ) × 100",
+        variables: "Nota: En soluciones diluidas, V_solución ≈ V_soluto + V_solvente (aforado en matraz).",
+        applicability: "Es el estándar internacional en la industria hospitalaria y cosmética para antisépticos (alcohol antiséptico al 70% v/v), en la industria enológica y cervecera (grados Gay-Lussac de alcohol etílico) y en la formulación de anticongelantes automotrices con etilenglicol.",
+        problem: "Ejercicio Modelo 2: Para preparar 500 mL de una solución desinfectante de etanol al 70% v/v, ¿qué volumen de etanol puro se debe medir y aforar con agua destilada?",
+        steps: "Paso 1 (Identificar datos): % v/v = 70% | Volumen de solución = 500 mL.\nPaso 2 (Despejar V_soluto de la fórmula): V_soluto = (% v/v × V_solución) / 100.\nPaso 3 (Calcular): V_soluto = (70 × 500 mL) / 100 = 35000 / 100 = 350 mL de etanol puro.\nRespuesta: Se deben medir 350 mL de etanol y completar con agua hasta 500 mL."
+      },
+      {
+        num: 3,
+        shortName: "3. % m/v",
+        category: "Unidad Física de Concentración",
+        title: "3. Porcentaje Masa a Volumen (% m/v)",
+        visualType: "PNG_PHYSICAL_UNITS",
+        visualCaption: "Lámina PNG: Sueros clínicos endovenosos y dextrosa hospitalaria",
+        definition: "El porcentaje masa a volumen (% m/v) representa los gramos (g) de soluto (generalmente sólido) disueltos por cada 100 mililitros (mL) de solución final. Combina la facilidad de pesar el soluto sólido en una balanza analítica con la practicidad de medir el volumen final de la solución en un balón aforado.",
+        formula: "% m/v = ( Masa de soluto (g) / Volumen de solución (mL) ) × 100",
+        variables: "Unidades obligatorias en la fórmula estándar: Masa en gramos (g) y Volumen en mililitros (mL).",
+        applicability: "Es la unidad clínica por excelencia en medicina de urgencias: el suero fisiológico isotónico es NaCl al 0,9% m/v (0,9 g por cada 100 mL) y el suero glucosado endovenoso es dextrosa al 5% m/v. También se usa en jarabes pediátricos y reactivos de laboratorio.",
+        problem: "Ejercicio Modelo 3: Un paciente recibe una bolsa de 250 mL de suero glucosado al 5,0 % m/v. ¿Cuántos gramos totales de glucosa ingresan al organismo del paciente?",
+        steps: "Paso 1 (Identificar datos): % m/v = 5,0 % | V_solución = 250 mL.\nPaso 2 (Despejar Masa de soluto): m_soluto = (% m/v × V_solución) / 100.\nPaso 3 (Sustituir y operar): m_soluto = (5,0 g/100mL × 250 mL) = 12,5 g de glucosa.\nRespuesta: El paciente recibe exactamente 12,5 g de glucosa."
+      },
+      {
+        num: 4,
+        shortName: "4. ppm",
+        category: "Unidad Física de Trazas",
+        title: "4. Partes por Millón (ppm)",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Control ambiental de agua potable y trazas en ppm",
+        definition: "Las partes por millón (ppm) expresan cuántas partes de soluto están presentes por cada millón (10⁶) de partes de solución. En soluciones acuosas diluidas (donde la densidad de la solución es prácticamente 1,00 g/mL = 1,00 kg/L), 1 ppm equivale exactamente a 1 miligramo de soluto por cada litro de solución (1 mg/L) o 1 mg/kg.",
+        formula: "ppm = mg de soluto / L de solución   ó   ppm = ( m_soluto (g) / m_solución (g) ) × 10⁶",
+        variables: "Equivalencia clave: 1 g = 1000 mg | 1 ppm = 1 mg/L = 1 μg/mL.",
+        applicability: "Indispensable en ingeniería ambiental y potabilización de aguas para regular el cloro residual (0,3 a 2,0 ppm), el flúor dental en agua potable (0,7 ppm), la dureza por carbonato de calcio y los límites máximos de monóxido de carbono (CO) en el aire urbano.",
+        problem: "Ejercicio Modelo 4: En el análisis de 2,5 L de agua de una planta de tratamiento se encontraron 4,0 mg de cloro libre (Cl₂). ¿Cuál es la concentración de cloro en ppm?",
+        steps: "Paso 1 (Identificar datos): Masa de soluto = 4,0 mg | Volumen de solución = 2,5 L.\nPaso 2 (Aplicar fórmula directa mg/L): ppm = 4,0 mg / 2,5 L.\nPaso 3 (Calcular): ppm = 1,6 mg/L = 1,6 ppm.\nRespuesta: El agua contiene 1,6 ppm de cloro libre (dentro del rango seguro potable)."
+      },
+      {
+        num: 5,
+        shortName: "5. ppb",
+        category: "Unidad Física de Ultratrazas",
+        title: "5. Partes por Billón (ppb)",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Detección toxicológica de metales pesados en ppb (μg/L)",
+        definition: "Las partes por billón anglosajón (ppb, mil millones = 10⁹) cuantifican concentraciones extremadamente pequeñas (ultratrazas) de un soluto por cada 10⁹ partes de solución. En soluciones acuosas diluidas, 1 ppb equivale exactamente a 1 microgramo de soluto por cada litro de solución (1 μg/L). Nota: 1 ppm = 1000 ppb.",
+        formula: "ppb = μg de soluto / L de solución   ó   ppb = ( m_soluto (g) / m_solución (g) ) × 10⁹",
+        variables: "Equivalencias: 1 mg = 1000 μg (microgramos) | 1 g = 10⁶ μg | 1 ppm = 1000 ppb.",
+        applicability: "Se utiliza en toxicología ambiental y salud pública para vigilar contaminantes altamente letales a dosis mínimas en ríos y alimentos, tales como mercurio (Hg, límite OMS = 6 ppb), plomo (Pb, límite = 10 ppb), arsénico (As = 10 ppb) y dioxinas o pesticidas organoclorados.",
+        problem: "Ejercicio Modelo 5: Una muestra de 4,0 L de agua subterránea contiene 0,036 mg de plomo (Pb²⁺). Expresa esta concentración en ppb y determina si supera el límite OMS (10 ppb).",
+        steps: "Paso 1 (Convertir mg a microgramos μg): 0,036 mg × (1000 μg / 1 mg) = 36 μg de Pb²⁺.\nPaso 2 (Dividir entre los litros de solución): ppb = 36 μg / 4,0 L = 9,0 μg/L = 9,0 ppb.\nRespuesta: La concentración es de 9,0 ppb (no supera el límite máximo de 10 ppb)."
+      },
+      {
+        num: 6,
+        shortName: "6. Densidad (ρ)",
+        category: "Propiedad Física Puente",
+        title: "6. Densidad de la Solución (ρ o d)",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Picnómetro, densímetro y puente Masa ↔ Volumen",
+        definition: "La densidad de una solución (ρ) es la relación entre la masa total de la solución (soluto + solvente) y el volumen total que ocupa dicha solución a una temperatura dada. En los cálculos de concentración, la densidad actúa como el 'puente matemático' indispensable para convertir unidades basadas en masa (% m/m, molalidad) a unidades basadas en volumen (% m/v, Molaridad, Normalidad).",
+        formula: "ρ_solución = Masa de solución (g) / Volumen de solución (mL)   ⇒   M = (% m/m × ρ × 10) / PM",
+        variables: "Despejes clave: m_solución = ρ × V_solución  |  V_solución = m_solución / ρ.",
+        applicability: "Control de calidad de ácidos comerciales concentrados en la industria química (ej. ácido sulfúrico H₂SO₄ al 98% m/m con ρ = 1,84 g/mL), verificación del electrolito en baterías automotrices, control de calidad de la leche (lactodensímetro: 1,028 a 1,034 g/mL) y jarabes.",
+        problem: "Ejercicio Modelo 6: Se tienen 250 mL de una solución de ácido nítrico (HNO₃) cuya densidad es de 1,40 g/mL al 65% m/m. ¿Cuál es la masa total de la solución y cuántos gramos de HNO₃ puro contiene?",
+        steps: "Paso 1 (Hallar masa total de la solución con la densidad): m_solución = ρ × V = 1,40 g/mL × 250 mL = 350 g de solución.\nPaso 2 (Hallar gramos de HNO₃ puro con el % m/m): m_soluto = (65 × 350 g) / 100 = 227,5 g de HNO₃.\nRespuesta: La solución pesa 350 g en total y contiene 227,5 g de HNO₃ puro."
+      },
+      {
+        num: 7,
+        shortName: "7. Molaridad (M)",
+        category: "Unidad Química de Concentración",
+        title: "7. Molaridad o Concentración Molar (M)",
+        visualType: "3D_MOLARITY_FLASK",
+        visualCaption: "Modelo 3D Interactivo: Solvatación de iones por litro de solución (mol/L)",
+        definition: "La Molaridad (M) es la unidad química más utilizada en estequiometría; define el número de moles de soluto (n) disueltos por cada 1 litro (L) de solución total. Como el volumen del líquido varía ligeramente con la temperatura, la molaridad depende de la temperatura. Recuerda que los moles (n) se obtienen dividiendo la masa en gramos entre la masa molar (PM).",
+        formula: "M = n (moles de soluto) / V_solución (L)   ó   M = m_soluto (g) / ( PM (g/mol) × V_solución (L) )",
+        variables: "Donde: n = masa (g) / Masa Molar (g/mol) | 1 L = 1000 mL.",
+        applicability: "Preparación de todos los reactivos estandarizados en laboratorios de análisis químico, titulaciones ácido-base, cinética enzimática, equilibrio químico, cálculo de pH (pH = -log[H⁺]) y preparación de soluciones amortiguadoras (buffers) biológicos.",
+        problem: "Ejercicio Modelo 7: Calcula la Molaridad (M) de una solución preparada disolviendo 20 g de hidróxido de sodio (NaOH, Masa Molar = 40 g/mol) en agua hasta completar 500 mL de solución.",
+        steps: "Paso 1 (Calcular moles de NaOH): n = 20 g / (40 g/mol) = 0,50 moles de NaOH.\nPaso 2 (Convertir volumen a Litros): V = 500 mL / 1000 = 0,50 L.\nPaso 3 (Calcular Molaridad): M = 0,50 moles / 0,50 L = 1,0 mol/L = 1,0 M.\nRespuesta: La solución tiene una concentración de 1,0 M (1,0 molar)."
+      },
+      {
+        num: 8,
+        shortName: "8. Molalidad (m)",
+        category: "Unidad Química de Concentración",
+        title: "8. Molalidad o Concentración Molal (m)",
+        visualType: "PNG_CHEMICAL_MOLAR_MOLAL",
+        visualCaption: "Lámina PNG: Contraste Molaridad (L solución) vs Molalidad (kg solvente)",
+        definition: "La Molalidad (m, en minúscula) expresa el número de moles de soluto (n) disueltos por cada 1 kilogramo (1000 g) de SOLVENTE puro (no de solución). Al estar referida exclusivamente a masas (moles y kilogramos), la molalidad NO cambia cuando varía la temperatura ni la presión del sistema.",
+        formula: "m = n (moles de soluto) / Masa de solvente (kg)",
+        variables: "Atención crítica: El denominador es kilogramos de SOLVENTE puro (1 kg = 1000 g).",
+        applicability: "Es la unidad obligatoria en fisicoquímica e ingeniería para calcular las Propiedades Coligativas en sistemas sometidos a cambios extremos de temperatura: descenso crioscópico (anticongelantes ΔTf = Kf · m) y ascenso ebulloscópico (ΔTb = Kb · m).",
+        problem: "Ejercicio Modelo 8: Se disuelven 90 g de glucosa (C₆H₁₂O₆, Masa Molar = 180 g/mol) en 250 g de agua destilada. ¿Cuál es la molalidad (m) de la solución?",
+        steps: "Paso 1 (Calcular moles de glucosa): n = 90 g / (180 g/mol) = 0,50 moles.\nPaso 2 (Pasar masa del solvente H₂O a kilogramos): m_solvente = 250 g / 1000 = 0,250 kg.\nPaso 3 (Calcular molalidad): m = 0,50 moles / 0,250 kg = 2,0 mol/kg = 2,0 m.\nRespuesta: La concentración es 2,0 molal (2,0 m)."
+      },
+      {
+        num: 9,
+        shortName: "9. Eq-gramo",
+        category: "Unidad Química Estequiométrica",
+        title: "9. Equivalente-Gramo (eq-g) y Factor de Reactividad (θ)",
+        visualType: "PNG_EQUIV_NORMALITY",
+        visualCaption: "Lámina PNG: Tabla del parámetro θ para Ácidos, Bases y Sales",
+        definition: "El Equivalente-Gramo (eq-g) o peso equivalente es la masa en gramos de una sustancia que libera, acepta o reacciona con 1 mol de protones (H⁺), 1 mol de iones hidroxilo (OH⁻) o 1 mol de cargas eléctricas/electrones. Se obtiene dividiendo la Masa Molar (PM) entre el factor de valencia o reactividad (θ):• En ácidos: θ = número de H⁺ ionizables (ej. HCl θ=1; H₂SO₄ θ=2; H₃PO₄ θ=3).\n• En hidróxidos (bases): θ = número de OH⁻ (ej. NaOH θ=1; Ca(OH)₂ θ=2; Al(OH)₃ θ=3).\n• En sales: θ = carga total positiva del catión metálico (ej. NaCl θ=1; Al₂(SO₄)₃ → 2×(+3) = 6).",
+        formula: "1 eq-g = Masa Molar (g/mol) / θ     ⇒     N° de eq-g = Masa de soluto (g) / ( PM / θ )",
+        variables: "Relación rápida: Número de eq-g = n (moles) × θ.",
+        applicability: "Base del principio de equivalencia química en volumetría analítica: en toda titulación de neutralización o redox en el punto de equivalencia se cumple siempre que el número de equivalentes-gramo del ácido es exactamente igual al de la base.",
+        problem: "Ejercicio Modelo 9: Determina el valor de 1 equivalente-gramo (eq-g) del ácido sulfúrico (H₂SO₄, PM = 98 g/mol) y calcula cuántos eq-g hay en 49 g de este ácido.",
+        steps: "Paso 1 (Determinar factor θ del H₂SO₄): Tiene 2 hidrógenos ionizables ⇒ θ = 2 eq/mol.\nPaso 2 (Masa de 1 eq-g): Masa equivalente = 98 g/mol / 2 = 49 g/eq-g.\nPaso 3 (Número de eq-g en 49 g): N° eq-g = 49 g / (49 g/eq-g) = 1,0 eq-g.\nRespuesta: 1 eq-g de H₂SO₄ pesa 49 g; por tanto, en 49 g hay exactamente 1,0 eq-g."
+      },
+      {
+        num: 10,
+        shortName: "10. Normalidad (N)",
+        category: "Unidad Química de Concentración",
+        title: "10. Normalidad o Concentración Normal (N)",
+        visualType: "PNG_EQUIV_NORMALITY",
+        visualCaption: "Lámina PNG: Titulación volumétrica ácido-base y relación N = M × θ",
+        definition: "La Normalidad (N) expresa el número de equivalentes-gramo (eq-g) de soluto disueltos por cada 1 litro (L) de solución total. Dado que el número de equivalentes es igual a los moles multiplicados por el factor de reactividad (θ), la Normalidad guarda una relación directa y rapidísima con la Molaridad: N = M × θ.",
+        formula: "N = N° de eq-g de soluto / V_solución (L)     ó     N = M × θ",
+        variables: "Donde: N ≥ M siempre (si θ = 1, entonces N = M; si θ = 2, entonces N = 2M).",
+        applicability: "Titulaciones ácido-base (V₁·N₁ = V₂·N₂), valoraciones redox con permanganato de potasio o dicromato en control de aguas residuales, análisis bromatológico de acidez en leche, vinos y aceites vegetales.",
+        problem: "Ejercicio Modelo 10: Se prepara una solución disolviendo 37 g de hidróxido de calcio, Ca(OH)₂ (Masa Molar = 74 g/mol), hasta completar 500 mL de solución. Calcula su Molaridad (M) y su Normalidad (N).",
+        steps: "Paso 1 (Identificar θ del Ca(OH)₂): Posee 2 grupos OH⁻ ⇒ θ = 2 eq/mol.\nPaso 2 (Calcular moles y Molaridad): n = 37 g / 74 g/mol = 0,50 moles | V = 0,50 L ⇒ M = 0,50 mol / 0,50 L = 1,0 M.\nPaso 3 (Calcular Normalidad con N = M × θ): N = 1,0 M × 2 = 2,0 N (2,0 eq-g/L).\nRespuesta: La solución es 1,0 Molar (1,0 M) y 2,0 Normal (2,0 N)."
+      }
+    ];
+
+    /*************************************************************************
+     * 3. BANCO DE 10 EJERCICIOS EVALUATIVOS DE LA SECCIÓN II (8 CERRADOS + 2 ABIERTOS)
+     *************************************************************************/
+    const CLOSED_QUESTIONS = [
+      {
+        id: 1,
+        topic: "Cálculo de Porcentaje Masa a Masa (% m/m)",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "PNG_PHYSICAL_UNITS",
+        visualCaption: "Lámina PNG: Preparación gravimétrica de solución acuosa (% m/m)",
+        context: "En el laboratorio de química de grado 10°, un estudiante necesita preparar una solución de sulfato de sodio (Na₂SO₄) para un ensayo de precipitación. Para ello, pesa en una balanza analítica 30 g de Na₂SO₄ anhidro puro y los transfiere a un vaso de precipitados que contiene 120 g de agua destilada (H₂O), agitando hasta lograr una mezcla totalmente homogénea.",
+        stem: "Recuerda que la masa de la solución es la suma del soluto más el solvente. ¿Cuál es el porcentaje masa a masa (% m/m) de la solución preparada por el estudiante?",
+        options: [
+          "A. 25,0 % m/m, porque se dividen los 30 g de soluto únicamente entre los 120 g de agua.",
+          "B. 20,0 % m/m, ya que hay 30 g de soluto disueltos en una masa total de 150 g de solución (30 g + 120 g).",
+          "C. 15,0 % m/m, dado que la suma de las masas se multiplica por la mitad del volumen.",
+          "D. 30,0 % m/m, porque los gramos de soluto siempre coinciden con el porcentaje final sin importar el agua."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 2,
+        topic: "Porcentaje Volumen a Volumen (% v/v) y Masa a Volumen (% m/v)",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "PNG_PHYSICAL_UNITS",
+        visualCaption: "Lámina PNG: Formulación de antisépticos (% v/v) y sueros (% m/v)",
+        context: "En una clínica veterinaria se preparan dos soluciones simultáneamente: la Solución X se elabora mezclando 60 mL de alcohol isopropílico puro con suficiente agua destilada hasta completar un volumen final de 200 mL de solución; por su parte, la Solución Y se prepara disolviendo 4,5 g de cloruro de sodio (NaCl) en agua hasta aforar exactamente a 500 mL de solución.",
+        stem: "Al etiquetar ambos frascos con sus unidades físicas correspondientes, ¿cuáles son las concentraciones exactas de la Solución X (% v/v) y de la Solución Y (% m/v)?",
+        options: [
+          "A. Solución X = 30,0 % v/v  y  Solución Y = 0,9 % m/v.",
+          "B. Solución X = 60,0 % v/v  y  Solución Y = 4,5 % m/v.",
+          "C. Solución X = 15,0 % v/v  y  Solución Y = 9,0 % m/v.",
+          "D. Solución X = 30,0 % v/v  y  Solución Y = 2,25 % m/v."
+        ],
+        correctIndex: 0
+      },
+      {
+        id: 3,
+        topic: "Unidades de Trazas: Partes por Millón (ppm) y Billón (ppb)",
+        competency: "Explicación de fenómenos",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Monitoreo de calidad de agua en ppm (mg/L) y ppb (μg/L)",
+        context: "Un laboratorio ambiental en Córdoba analiza el agua de un pozo profundo tomando una muestra de 5,0 Litros. El equipo de absorción atómica reporta que en esos 5,0 L de agua hay disueltos 15 mg de iones fluoruro (F⁻) y 40 μg (microgramos) de mercurio (Hg²⁺). Recuerda que en soluciones acuosas diluidas: 1 ppm = 1 mg/L y 1 ppb = 1 μg/L.",
+        stem: "¿Cuáles son las concentraciones respectivas de fluoruro en partes por millón (ppm) y de mercurio en partes por billón (ppb) en el agua del pozo?",
+        options: [
+          "A. Fluoruro = 15 ppm  y  Mercurio = 40 ppb.",
+          "B. Fluoruro = 3,0 ppm (15 mg / 5,0 L)  y  Mercurio = 8,0 ppb (40 μg / 5,0 L).",
+          "C. Fluoruro = 75 ppm  y  Mercurio = 200 ppb.",
+          "D. Fluoruro = 0,3 ppm  y  Mercurio = 0,8 ppb."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 4,
+        topic: "Aplicación de la Densidad (ρ) en Cálculos de Concentración",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Conversión Masa-Volumen mediante la Densidad (ρ = m/V)",
+        context: "En el almacén de reactivos se dispone de una botella de ácido clorhídrico concentrado (HCl) cuya etiqueta técnica indica: Concentración = 36,0 % m/m y Densidad (ρ) = 1,20 g/mL. Un estudiante mide con una probeta exactamente 100 mL de esta solución ácida para realizar un cálculo estequiométrico.",
+        stem: "Utilizando la densidad como puente entre el volumen y la masa de la solución, ¿cuál es la masa total de esos 100 mL de solución y cuántos gramos de HCl puro están contenidos en ellos?",
+        options: [
+          "A. La solución pesa 100 g y contiene 36,0 g de HCl puro.",
+          "B. La solución pesa 120 g (1,20 g/mL × 100 mL) y contiene 43,2 g de HCl puro (36% de 120 g).",
+          "C. La solución pesa 83,3 g y contiene 30,0 g de HCl puro.",
+          "D. La solución pesa 120 g y contiene 120 g de HCl puro sin agua."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 5,
+        topic: "Cálculo de Molaridad (M)",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "3D_MOLARITY_FLASK",
+        visualCaption: "Modelo 3D: Concentración Molar de CaCl₂ en solución acuosa",
+        context: "Para preparar un electrolito conductor, se pesan 22,2 g de cloruro de calcio puro (CaCl₂, cuya Masa Molar es de 111 g/mol) y se disuelven en agua destilada dentro de un matraz aforado hasta completar un volumen final de 400 mL (0,40 L) de solución a 25 °C.",
+        stem: "Aplicando la definición de Molaridad (M = moles de soluto / Litros de solución), ¿cuál es la concentración molar de la solución de CaCl₂ obtenida?",
+        options: [
+          "A. 0,20 M, porque hay 0,20 moles de CaCl₂.",
+          "B. 0,50 M, ya que 22,2 g equivalen a 0,20 moles de CaCl₂, y al dividir entre 0,40 L se obtiene 0,50 mol/L.",
+          "C. 2,00 M, porque se multiplican los gramos por el volumen en litros.",
+          "D. 0,05 M, dado que 400 mL equivalen a 4,0 Litros."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 6,
+        topic: "Cálculo de Molalidad (m) en Propiedades Coligativas",
+        competency: "Explicación de fenómenos",
+        visualType: "PNG_CHEMICAL_MOLAR_MOLAL",
+        visualCaption: "Lámina PNG: Determinación de la Molalidad (moles / kg de solvente)",
+        context: "Para proteger el radiador de un vehículo frente a bajas temperaturas, un ingeniero químico disuelve 124 g de etilenglicol (C₂H₆O₂, Masa Molar = 62 g/mol) en 500 g (0,500 kg) de agua pura. Para calcular la disminución del punto de congelación, requiere conocer con exactitud la concentración molal (m) de la mezcla.",
+        stem: "Teniendo en cuenta que la molalidad relaciona los moles de soluto por cada kilogramo de solvente puro, ¿cuál es la molalidad (m) de la solución anticongelante?",
+        options: [
+          "A. 2,0 molal (m), porque se obtienen 2,0 moles de etilenglicol.",
+          "B. 4,0 molal (m), ya que 124 g corresponden a 2,0 moles de soluto, que divididos entre 0,500 kg de agua dan 4,0 mol/kg.",
+          "C. 1,0 molal (m), porque se divide entre la suma de 124 g + 500 g.",
+          "D. 0,25 molal (m), porque el peso molecular se multiplica por los 500 g."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 7,
+        topic: "Equivalentes-Gramo (eq-g) y Factor de Reactividad (θ)",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "PNG_EQUIV_NORMALITY",
+        visualCaption: "Lámina PNG: Cálculo de Equivalentes-Gramo en Ácidos Polipróticos y Bases",
+        context: "El ácido fosfórico (H₃PO₄, Masa Molar = 98 g/mol) es un ácido triprótico que al disociarse completamente libera 3 protones H⁺ por cada molécula (factor θ = 3 eq/mol). Por otro lado, el hidróxido de aluminio, Al(OH)₃ (Masa Molar = 78 g/mol), posee 3 grupos hidroxilo OH⁻ (factor θ = 3 eq/mol).",
+        stem: "Con base en la fórmula 1 eq-g = Masa Molar / θ, ¿cuánto pesa 1 equivalente-gramo de H₃PO₄ y cuántos equivalentes-gramo hay en 156 g de Al(OH)₃?",
+        options: [
+          "A. 1 eq-g de H₃PO₄ pesa 98 g, y en 156 g de Al(OH)₃ hay 2,0 eq-g.",
+          "B. 1 eq-g de H₃PO₄ pesa 32,67 g (98 / 3), y en 156 g de Al(OH)₃ hay 6,0 eq-g (2 moles × 3 eq/mol).",
+          "C. 1 eq-g de H₃PO₄ pesa 49 g, y en 156 g de Al(OH)₃ hay 3,0 eq-g.",
+          "D. 1 eq-g de cualquier compuesto siempre pesa 1,0 gramo exacto."
+        ],
+        correctIndex: 1
+      },
+      {
+        id: 8,
+        topic: "Normalidad (N) y Relación Directa con la Molaridad (N = M × θ)",
+        competency: "Uso comprensivo del conocimiento científico",
+        visualType: "PNG_EQUIV_NORMALITY",
+        visualCaption: "Lámina PNG: Equivalencia entre Molaridad y Normalidad en H₂SO₄",
+        context: "En un análisis volumétrico de titulación se emplea una solución acuosa de ácido sulfúrico (H₂SO₄, Masa Molar = 98 g/mol, ácido diprótico con θ = 2 eq/mol). Se sabe que la solución fue preparada disolviendo 49 g de H₂SO₄ puro en agua hasta alcanzar un volumen total de 250 mL (0,25 L) de solución.",
+        stem: "¿Cuáles son los valores correctos de la Molaridad (M) y de la Normalidad (N) para esta solución de ácido sulfúrico?",
+        options: [
+          "A. Molaridad = 0,5 M  y  Normalidad = 1,0 N.",
+          "B. Molaridad = 2,0 M (0,5 moles / 0,25 L)  y  Normalidad = 4,0 N (porque N = M × θ = 2,0 × 2).",
+          "C. Molaridad = 4,0 M  y  Normalidad = 2,0 N.",
+          "D. Molaridad = 1,0 M  y  Normalidad = 1,0 N."
+        ],
+        correctIndex: 1
+      }
+    ];
+
+    const OPEN_QUESTIONS = [
+      {
+        id: 9,
+        topic: "Problema Integrador I: De % m/m y Densidad a Molaridad y Normalidad",
+        competency: "Resolución analítica paso a paso",
+        visualType: "PNG_PPM_PPB_DENSITY",
+        visualCaption: "Lámina PNG: Esquema de Conversión % m/m + Densidad ➔ Molaridad y Normalidad",
+        context: "Una batería industrial utiliza una solución acuosa de ácido sulfúrico (H₂SO₄, Masa Molar = 98 g/mol, factor θ = 2 eq/mol) que se encuentra al 49,0 % m/m y posee una densidad (ρ) de 1,20 g/mL a 25 °C. Se toma una alícuota de 1000 mL (1,0 L) de esta solución.",
+        stem: "Desarrolla paso a paso el procedimiento matemático y explica cómo hallar: 1) La masa total en gramos de 1,0 L (1000 mL) de solución usando la densidad; 2) Los gramos de H₂SO₄ puro presentes usando el % m/m; 3) La Molaridad (M) de la solución; y 4) La Normalidad (N) de la solución.",
+        keywords: ["densidad", "gramos", "soluto", "solucion", "moles", "molaridad", "normalidad", "equivalentes", "litros", "1200", "588", "acido"]
+      },
+      {
+        id: 10,
+        topic: "Problema Integrador II: Comparación Experimental de Molaridad, Molalidad y ppm",
+        competency: "Indagación y cálculo químico",
+        visualType: "PNG_CHEMICAL_MOLAR_MOLAL",
+        visualCaption: "Lámina PNG: Análisis comparativo de unidades físicas y químicas",
+        context: "En un laboratorio de control de calidad se prepara una solución disolviendo 40 g de hidróxido de sodio (NaOH, Masa Molar = 40 g/mol, θ = 1) en 500 g (0,500 kg) de agua destilada. Al medir el volumen final de la solución resultante se obtiene exactamente 500 mL (0,500 L). Por otra parte, una muestra de agua tratada contiene 5 mg de NaOH en 2,5 L.",
+        stem: "Realiza los cálculos completos y explica: 1) ¿Cuál es la Molaridad (M), la Normalidad (N) y la Molalidad (m) de la primera solución de NaOH? 2) ¿Por qué la molalidad no cambia si calentamos la solución a 80 °C mientras que la molaridad sí varía ligeramente? 3) ¿Cuántas ppm de NaOH tiene la segunda muestra de agua tratada?",
+        keywords: ["molaridad", "molalidad", "normalidad", "moles", "kilogramos", "litros", "temperatura", "volumen", "masa", "ppm", "solvente", "naoh"]
+      }
+    ];
+
+    const ALL_QUESTIONS = [...CLOSED_QUESTIONS, ...OPEN_QUESTIONS];
+
+    /*************************************************************************
+     * 4. GENERADOR DE LÁMINAS CIENTÍFICAS EN FORMATO .PNG DE ALTA DEFINICIÓN
+     *    (CERO SVG: Todas las láminas se renderizan a 900x600 px en image/png)
+     *************************************************************************/
+    const pngPlateCache = {};
+
+    function generateScientificPlatePNG(plateKey) {
+      if (pngPlateCache[plateKey]) return pngPlateCache[plateKey];
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 900;
+      canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+
+      const bgGrad = ctx.createLinearGradient(0, 0, 900, 600);
+      bgGrad.addColorStop(0, '#06152d');
+      bgGrad.addColorStop(0.5, '#0b2246');
+      bgGrad.addColorStop(1, '#040e20');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 900, 600);
+
+      ctx.strokeStyle = 'rgba(223, 178, 53, 0.45)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(14, 14, 872, 572);
+
+      ctx.fillStyle = 'rgba(15, 43, 84, 0.92)';
+      ctx.fillRect(16, 16, 868, 54);
+      ctx.fillStyle = '#dfb235';
+      ctx.font = 'bold 17px Plus Jakarta Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('GIMNASIO CRISTIANO FARO DE LUZ • QUÍMICA 10°: UNIDADES DE CONCENTRACIÓN', 32, 49);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 13px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('LÁMINA PNG HD (900x600)', 865, 49);
+
+      if (plateKey === 'PNG_PHYSICAL_UNITS') {
+        // Lámina de % m/m, % v/v y % m/v
+        const cards = [
+          { x: 55, title: '1. PORCENTAJE % m/m', color: '#38bdf8', eq: '% m/m = (g soluto / g solución) × 100', sub1: 'm_solución = m_soluto + m_solvente', sub2: 'Independiente de la temperatura', ex: 'Ej: 25g KCl + 175g H₂O = 200g sol → 12,5%' },
+          { x: 330, title: '2. PORCENTAJE % v/v', color: '#10b981', eq: '% v/v = (mL soluto / mL solución) × 100', sub1: 'Mezclas líquidas miscibles (Alcohol/Agua)', sub2: 'Aforado en matraz volumétrico', ex: 'Ej: 70 mL Etanol en 100 mL sol → 70% v/v' },
+          { x: 605, title: '3. PORCENTAJE % m/v', color: '#dfb235', eq: '% m/v = (g soluto / mL solución) × 100', sub1: 'Sólido pesado (g) en volumen aforado (mL)', sub2: 'Estándar clínico y hospitalario', ex: 'Ej: Suero NaCl 0,9% m/v (0,9 g / 100 mL)' }
+        ];
+
+        cards.forEach(c => {
+          ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+          ctx.beginPath(); ctx.roundRect(c.x, 100, 240, 445, 18); ctx.fill();
+          ctx.strokeStyle = c.color; ctx.lineWidth = 3; ctx.stroke();
+
+          ctx.fillStyle = c.color; ctx.font = 'bold 17px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(c.title, c.x + 120, 140);
+
+          // Dibujo de matraz / balanza
+          ctx.fillStyle = 'rgba(255,255,255,0.07)';
+          ctx.beginPath(); ctx.arc(c.x + 120, 225, 52, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = c.color; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px monospace';
+          ctx.fillText('100 Partes', c.x + 120, 222);
+          ctx.fillStyle = c.color; ctx.font = '12px sans-serif';
+          ctx.fillText('de Solución', c.x + 120, 242);
+
+          ctx.fillStyle = '#fde047'; ctx.font = 'bold 12px monospace';
+          ctx.fillText(c.eq, c.x + 120, 320);
+
+          ctx.fillStyle = '#e2e8f0'; ctx.font = '12.5px Plus Jakarta Sans, sans-serif';
+          ctx.fillText(c.sub1, c.x + 120, 370);
+          ctx.fillText(c.sub2, c.x + 120, 400);
+
+          ctx.fillStyle = '#67e8f9'; ctx.font = 'bold 11.5px Plus Jakarta Sans, sans-serif';
+          ctx.fillText(c.ex, c.x + 120, 465);
+        });
+
+      } else if (plateKey === 'PNG_PPM_PPB_DENSITY') {
+        // Lámina de ppm, ppb y Densidad (ρ)
+        ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+        ctx.beginPath(); ctx.roundRect(50, 95, 380, 460, 18); ctx.fill();
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 20px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('UNIDADES DE TRAZAS: ppm y ppb', 240, 135);
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.beginPath(); ctx.roundRect(75, 160, 330, 155, 14); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px monospace';
+        ctx.fillText('ppm = mg de soluto / L solución', 240, 195);
+        ctx.fillStyle = '#bae6fd'; ctx.font = '14px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('1 parte en 1.000.000 (10⁶)', 240, 228);
+        ctx.fillText('1 g = 1000 mg | Cloro potable: 0,5 - 2,0 ppm', 240, 258);
+        ctx.fillText('% m/v × 10.000 = ppm', 240, 288);
+
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+        ctx.beginPath(); ctx.roundRect(75, 340, 330, 165, 14); ctx.fill();
+        ctx.fillStyle = '#6ee7b7'; ctx.font = 'bold 17px monospace';
+        ctx.fillText('ppb = μg de soluto / L solución', 240, 375);
+        ctx.fillStyle = '#e2e8f0'; ctx.font = '14px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('1 parte en 1.000.000.000 (10⁹)', 240, 408);
+        ctx.fillText('1 mg = 1000 μg (microgramos)', 240, 438);
+        ctx.fillText('1 ppm = 1000 ppb | Metales pesados (Hg, Pb)', 240, 468);
+
+        // Panel Derecho: Densidad
+        ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+        ctx.beginPath(); ctx.roundRect(470, 95, 380, 460, 18); ctx.fill();
+        ctx.strokeStyle = '#dfb235'; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = '#dfb235'; ctx.font = 'bold 20px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('DENSIDAD DE LA SOLUCIÓN (ρ)', 660, 135);
+
+        ctx.fillStyle = 'rgba(223, 178, 53, 0.2)';
+        ctx.beginPath(); ctx.roundRect(495, 160, 330, 140, 14); ctx.fill();
+        ctx.fillStyle = '#fde047'; ctx.font = 'bold 17px monospace';
+        ctx.fillText('ρ = m_solución (g) / V_solución (mL)', 660, 198);
+        ctx.fillStyle = '#ffffff'; ctx.font = '14px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('Puente entre Masa (g) y Volumen (mL)', 660, 232);
+        ctx.fillText('m_solución = ρ × V   |   V = m_solución / ρ', 660, 265);
+
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.2)';
+        ctx.beginPath(); ctx.roundRect(495, 325, 330, 180, 14); ctx.fill();
+        ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#fda4af'; ctx.font = 'bold 16px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('FÓRMULA PUENTE DIRECTA A MOLARIDAD:', 660, 362);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px monospace';
+        ctx.fillText('M = ( % m/m × ρ × 10 ) / PM', 660, 405);
+        ctx.fillStyle = '#cbd5e1'; ctx.font = '13.5px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('Permite hallar la Molaridad directamente', 660, 445);
+        ctx.fillText('a partir de la etiqueta de un reactivo comercial.', 660, 470);
+
+      } else if (plateKey === 'PNG_CHEMICAL_MOLAR_MOLAL') {
+        // Lámina de Molaridad (M) vs Molalidad (m)
+        ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+        ctx.beginPath(); ctx.roundRect(50, 95, 380, 460, 18); ctx.fill();
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 21px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('7. MOLARIDAD (M)', 240, 140);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px monospace';
+        ctx.fillText('M = moles soluto (n) / V_solución (L)', 240, 190);
+        ctx.fillStyle = '#fde047'; ctx.font = 'bold 15px monospace';
+        ctx.fillText('n = masa (g) / Masa Molar (g/mol)', 240, 230);
+
+        ctx.fillStyle = '#cbd5e1'; ctx.font = '14.5px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('• Denominador: LITROS DE SOLUCIÓN TOTAL.', 240, 285);
+        ctx.fillText('• Se prepara en balón o matraz aforado.', 240, 320);
+        ctx.fillText('• SÍ varía ligeramente con la temperatura', 240, 355);
+        ctx.fillText('  por dilatación térmica del volumen líquido.', 240, 380);
+        ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 15px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('Unidades: mol / L = Molar (M)', 240, 450);
+
+        ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+        ctx.beginPath(); ctx.roundRect(470, 95, 380, 460, 18); ctx.fill();
+        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = '#c084fc'; ctx.font = 'bold 21px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('8. MOLALIDAD (m)', 660, 140);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 17px monospace';
+        ctx.fillText('m = moles soluto (n) / kg de SOLVENTE', 660, 190);
+        ctx.fillStyle = '#fde047'; ctx.font = 'bold 15px monospace';
+        ctx.fillText('kg solvente = gramos solvente / 1000', 660, 230);
+
+        ctx.fillStyle = '#cbd5e1'; ctx.font = '14.5px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('• Denominador: KILOGRAMOS DE SOLVENTE PURO.', 660, 285);
+        ctx.fillText('• NO depende de la temperatura (solo masas).', 660, 320);
+        ctx.fillText('• Se usa en Propiedades Coligativas:', 660, 355);
+        ctx.fillText('  Descenso crioscópico y Ascenso ebulloscópico.', 660, 380);
+        ctx.fillStyle = '#c084fc'; ctx.font = 'bold 15px Plus Jakarta Sans, sans-serif';
+        ctx.fillText('Unidades: mol / kg = Molal (m)', 660, 450);
+
+      } else {
+        // PNG_EQUIV_NORMALITY: Equivalente-Gramo y Normalidad
+        ctx.fillStyle = 'rgba(15, 43, 84, 0.85)';
+        ctx.beginPath(); ctx.roundRect(50, 95, 800, 460, 20); ctx.fill();
+        ctx.strokeStyle = '#dfb235'; ctx.lineWidth = 3; ctx.stroke();
+
+        ctx.fillStyle = '#dfb235'; ctx.font = 'bold 21px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('9 y 10. EQUIVALENTE-GRAMO (eq-g), FACTOR θ Y NORMALIDAD (N)', 450, 135);
+
+        // Cajas de fórmulas principales
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+        ctx.beginPath(); ctx.roundRect(80, 160, 350, 100, 14); ctx.fill();
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px monospace';
+        ctx.fillText('1 eq-g = Masa Molar (PM) / θ', 255, 195);
+        ctx.fillStyle = '#67e8f9'; ctx.font = 'bold 15px monospace';
+        ctx.fillText('N° eq-g = masa (g) / (PM / θ) = n × θ', 255, 232);
+
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+        ctx.beginPath(); ctx.roundRect(470, 160, 350, 100, 14); ctx.fill();
+        ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px monospace';
+        ctx.fillText('Normalidad (N) = N° eq-g / V (L)', 645, 195);
+        ctx.fillStyle = '#fde047'; ctx.font = 'bold 18px monospace';
+        ctx.fillText('Fórmula Rápida:  N = M × θ', 645, 234);
+
+        // Tabla del parámetro Theta
+        const cols = [
+          { x: 80, title: 'ÁCIDOS (θ = N° de H⁺)', c: '#f43f5e', r1: '• HCl, HNO₃  ➔  θ = 1', r2: '• H₂SO₄, H₂CO₃  ➔  θ = 2', r3: '• H₃PO₄  ➔  θ = 3' },
+          { x: 335, title: 'BASES / HIDRÓXIDOS (θ = N° OH⁻)', c: '#38bdf8', r1: '• NaOH, KOH  ➔  θ = 1', r2: '• Ca(OH)₂, Mg(OH)₂  ➔  θ = 2', r3: '• Al(OH)₃, Fe(OH)₃  ➔  θ = 3' },
+          { x: 590, title: 'SALES (θ = Carga Total Metal)', c: '#10b981', r1: '• NaCl, KNO₃  ➔  θ = 1', r2: '• CaSO₄, BaCl₂  ➔  θ = 2', r3: '• Al₂(SO₄)₃  ➔  2×(+3) = 6' }
+        ];
+
+        cols.forEach(col => {
+          ctx.fillStyle = 'rgba(8, 27, 56, 0.9)';
+          ctx.beginPath(); ctx.roundRect(col.x, 290, 230, 225, 14); ctx.fill();
+          ctx.strokeStyle = col.c; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = col.c; ctx.font = 'bold 13.5px Plus Jakarta Sans, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(col.title, col.x + 115, 325);
+          ctx.fillStyle = '#ffffff'; ctx.font = '14px monospace'; ctx.textAlign = 'left';
+          ctx.fillText(col.r1, col.x + 18, 375);
+          ctx.fillText(col.r2, col.x + 18, 420);
+          ctx.fillText(col.r3, col.x + 18, 465);
+        });
+      }
+
+      const dataUrl = canvas.toDataURL('image/png');
+      pngPlateCache[plateKey] = dataUrl;
+      return dataUrl;
+    }
+
+    function openImageZoomModal(src, title) {
+      if (!src) return;
+      document.getElementById('zoomModalImg').src = src;
+      document.getElementById('zoomModalTitle').textContent = title || 'Lámina Científica (.PNG)';
+      document.getElementById('imageZoomModal').classList.remove('hidden');
+    }
+
+    /*************************************************************************
+     * 5. ESTADO GLOBAL Y GESTIÓN DE LAS VENTANAS HORARIAS (30 DE NOVIEMBRE)
+     *************************************************************************/
+    function detectDeviceType() {
+      const ua = navigator.userAgent || '';
+      if (/iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'iPad';
+      if (/iPhone/i.test(ua)) return 'iPhone';
+      if (/Android/i.test(ua)) return 'Android';
+      return 'PC / Laptop';
+    }
+
+    const state = {
+      studentId: localStorage.getItem('faro_student_id_' + EXAM_CONFIG.examId) || ('stu_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6)),
+      studentName: '',
+      studentCourse: '10°A',
+      deviceType: detectDeviceType(),
+      activityPhase: 'WELCOME', // 'WELCOME' | 'SECTION1_THEORY' | 'SECTION2_EXERCISES' | 'FINISHED'
+      examStarted: false,
+      examFinished: false,
+      teacherScheduleBypass: false, // Si el docente autoriza fuera del 30 de noviembre
+      currentUnitTabIndex: 0,
+      visitedUnits: new Set([0]),
+      sec1RemainingSeconds: EXAM_CONFIG.sec1DefaultDurationSec,
+      sec1TimerInterval: null,
+      startTimeISO: null,
+      endTimeISO: null,
+      startTimestamp: 0,
+      currentQuestionIndex: 0,
+      remainingSeconds: EXAM_CONFIG.closedTimeSeconds,
+      timerInterval: null,
+      syncInterval: null,
+      closedAnswers: new Array(EXAM_CONFIG.closedCount).fill(null),
+      openAnswers: new Array(EXAM_CONFIG.openCount).fill(''),
+      penalties: [],
+      totalPenalizaciones: 0,
+      pantallaCompleta: true,
+      liberarTiempoSiempre: false,
+      sonometroActivo: true,
+      umbralRuido: EXAM_CONFIG.defaultNoiseThreshold,
+      focoActivo: true,
+      ruidoPorcentaje: 8,
+      lastUserActivity: Date.now(),
+      lastNoisePenaltyTime: 0,
+      finalMetrics: null
+    };
+    localStorage.setItem('faro_student_id_' + EXAM_CONFIG.examId, state.studentId);
+
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'touchmove', 'scroll', 'click'].forEach(evt => {
+      window.addEventListener(evt, () => { state.lastUserActivity = Date.now(); }, { passive: true });
+    });
+
+    // Verifica en qué ventana horaria del 30 de noviembre se encuentra el reloj
+    function evaluateScheduleWindow() {
+      const now = new Date();
+      const isNov30 = (now.getMonth() === EXAM_CONFIG.targetMonth && now.getDate() === EXAM_CONFIG.targetDay);
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      const currentSecsOfDay = currentMins * 60 + now.getSeconds();
+
+      const sec1StartSec = EXAM_CONFIG.sec1StartMinutes * 60; // 07:00:00
+      const sec1EndSec = EXAM_CONFIG.sec1EndMinutes * 60;     // 07:40:00
+      const sec2EndSec = EXAM_CONFIG.sec2EndMinutes * 60;     // 08:25:00
+
+      return {
+        isNov30,
+        currentMins,
+        currentSecsOfDay,
+        inSection1Window: isNov30 && currentSecsOfDay >= sec1StartSec && currentSecsOfDay < sec1EndSec,
+        inSection2Window: isNov30 && currentSecsOfDay >= sec1EndSec && currentSecsOfDay < sec2EndSec,
+        isPastEnd: isNov30 && currentSecsOfDay >= sec2EndSec,
+        secondsUntil740: Math.max(0, sec1EndSec - currentSecsOfDay),
+        secondsUntil825: Math.max(0, sec2EndSec - currentSecsOfDay)
+      };
+    }
+
+    /*************************************************************************
+     * 6. VALIDACIÓN E INICIO DE LA SECCIÓN I (GUÍA TEÓRICA 7:00 - 7:40 AM)
+     *************************************************************************/
+    function validateStudentForm() {
+      const input = document.getElementById('studentNameInput');
+      const btn = document.getElementById('startExamBtn');
+      const msg = document.getElementById('welcomeValidationMsg');
+      const raw = (input.value || '').trim().replace(/\s+/g, ' ');
+      const words = raw.split(' ').filter(w => w.length >= 2);
+
+      if (words.length >= 2) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        msg.textContent = '✅ Nombre verificado. Al iniciar quedarás enlazado en vivo con la Consola Maestra.';
+        msg.className = 'text-xs text-emerald-400 font-semibold';
+      } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        msg.textContent = '⚠️ Ingresa como mínimo tu nombre y primer apellido para habilitar el ingreso.';
+        msg.className = 'text-xs text-amber-300 font-medium';
+      }
+    }
+
+    function attemptStartActivity() {
+      const sched = evaluateScheduleWindow();
+      if (EXAM_CONFIG.scheduleEnabled && !state.teacherScheduleBypass) {
+        if (!sched.inSection1Window && !sched.inSection2Window) {
+          const modal = document.getElementById('scheduleLockModal');
+          const txt = document.getElementById('scheduleLockModalText');
+          txt.innerHTML = `Esta guía interactiva está programada oficialmente para el <strong>30 de noviembre</strong>:<br><br>• <strong>Sección I (Teoría y Ejemplos):</strong> 07:00 AM a 07:40 AM<br>• <strong>Sección II (Taller Evaluativo):</strong> 07:40 AM a 08:25 AM<br><br>Si estás realizando una sesión autorizada fuera de ese horario, solicita al <strong>Docente Cristian David Ayazo</strong> desbloquear desde la Consola Remota o con el botón <strong>🔐 Autorización Docente</strong>.`;
+          modal.classList.remove('hidden');
+          return;
+        }
+      }
+      startExamSession();
+    }
+
+    function startExamSession() {
+      const nameInput = document.getElementById('studentNameInput');
+      const courseSelect = document.getElementById('studentCourseSelect');
+      state.studentName = (nameInput.value || 'Estudiante Autorizado').trim().replace(/\s+/g, ' ');
+      state.studentCourse = courseSelect.value;
+      state.examStarted = true;
+      state.activityPhase = 'SECTION1_THEORY';
+      state.startTimeISO = new Date().toISOString();
+      state.startTimestamp = Date.now();
+      state.lastUserActivity = Date.now();
+
+      document.getElementById('activeStudentNameLabel').textContent = `${state.studentName} (${state.studentCourse})`;
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      document.getElementById('section1TheoryScreen').classList.remove('hidden');
+
+      requestExamFullscreen();
+      initSoundMeter();
+      listenToTeacherCommands();
+
+      // Configurar reloj de la Sección I (hasta las 7:40 AM si es 30 de nov, o 40 min reglamentarios)
+      const sched = evaluateScheduleWindow();
+      if (sched.inSection1Window) {
+        state.sec1RemainingSeconds = sched.secondsUntil740;
+      } else if (sched.inSection2Window) {
+        state.sec1RemainingSeconds = 0;
+      } else {
+        state.sec1RemainingSeconds = state.liberarTiempoSiempre ? 0 : EXAM_CONFIG.sec1DefaultDurationSec;
+      }
+
+      renderUnitTabs();
+      selectUnitTab(0);
+      startSection1Countdown();
+      pushStudentLiveState();
+
+      if (state.syncInterval) clearInterval(state.syncInterval);
+      state.syncInterval = setInterval(() => {
+        if (state.examStarted && !state.examFinished) {
+          pushStudentLiveState();
+        }
+      }, 2000);
+    }
+
+    function renderUnitTabs() {
+      const container = document.getElementById('unitTabsContainer');
+      container.innerHTML = '';
+      CONCENTRATION_UNITS_GUIDE.forEach((u, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isCurrent = state.currentUnitTabIndex === idx;
+        const isVisited = state.visitedUnits.has(idx);
+        btn.className = `unit-tab-btn px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-between ${
+          isCurrent
+            ? 'active-tab text-white'
+            : isVisited
+            ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'
+            : 'bg-navy-900/80 border-white/10 text-slate-300'
+        }`;
+        btn.innerHTML = `<span>${u.shortName}</span><span>${isVisited ? '✓' : '•'}</span>`;
+        btn.onclick = () => selectUnitTab(idx);
+        container.appendChild(btn);
+      });
+      document.getElementById('unitsReadBadge').textContent = `Unidades estudiadas: ${state.visitedUnits.size} / 10`;
+    }
+
+    let activeTheoryThreeCleanup = null;
+
+    function selectUnitTab(idx) {
+      if (activeTheoryThreeCleanup) {
+        activeTheoryThreeCleanup();
+        activeTheoryThreeCleanup = null;
+      }
+      state.currentUnitTabIndex = idx;
+      state.visitedUnits.add(idx);
+      const u = CONCENTRATION_UNITS_GUIDE[idx];
+
+      document.getElementById('unitCategoryBadge').textContent = u.category;
+      document.getElementById('unitTitleHeading').textContent = u.title;
+      document.getElementById('unitDefinitionText').textContent = u.definition;
+      document.getElementById('unitFormulaBox').textContent = u.formula;
+      document.getElementById('unitVariablesLegend').textContent = u.variables;
+      document.getElementById('unitApplicabilityText').textContent = u.applicability;
+      document.getElementById('unitSolvedProblemStatement').textContent = u.problem;
+      document.getElementById('unitSolvedStepsBox').textContent = u.steps;
+      document.getElementById('theoryVisualCaption').textContent = u.visualCaption;
+
+      const threeDiv = document.getElementById('theoryThreeContainer');
+      const pngDiv = document.getElementById('theoryPngContainer');
+      const imgEl = document.getElementById('theoryPlateImg');
+
+      if (u.visualType.startsWith('3D_')) {
+        threeDiv.classList.remove('hidden');
+        pngDiv.classList.add('hidden');
+        document.getElementById('theoryVisualBadge').textContent = 'VISOR 3D INTERACTIVO';
+        activeTheoryThreeCleanup = initThreeScene(u.visualType, threeDiv);
+      } else {
+        threeDiv.classList.add('hidden');
+        pngDiv.classList.remove('hidden');
+        document.getElementById('theoryVisualBadge').textContent = 'LÁMINA PNG HD';
+        imgEl.src = generateScientificPlatePNG(u.visualType);
+      }
+
+      renderUnitTabs();
+      evaluateSection1UnlockState();
+      pushStudentLiveState();
+    }
+
+    function navigateUnitTab(delta) {
+      const next = Math.max(0, Math.min(CONCENTRATION_UNITS_GUIDE.length - 1, state.currentUnitTabIndex + delta));
+      selectUnitTab(next);
+    }
+
+    function startSection1Countdown() {
+      if (state.sec1TimerInterval) clearInterval(state.sec1TimerInterval);
+      updateSection1TimerUI();
+      evaluateSection1UnlockState();
+
+      state.sec1TimerInterval = setInterval(() => {
+        const sched = evaluateScheduleWindow();
+        if (sched.inSection1Window && !state.liberarTiempoSiempre) {
+          state.sec1RemainingSeconds = sched.secondsUntil740;
+        } else if (state.sec1RemainingSeconds > 0) {
+          state.sec1RemainingSeconds--;
+        }
+        updateSection1TimerUI();
+        evaluateSection1UnlockState();
+      }, 1000);
+    }
+
+    function updateSection1TimerUI() {
+      const mins = Math.floor(state.sec1RemainingSeconds / 60);
+      const secs = state.sec1RemainingSeconds % 60;
+      const el = document.getElementById('section1TimerDisplay');
+      if (el) el.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function evaluateSection1UnlockState() {
+      const btn = document.getElementById('goToSection2Btn');
+      const banner = document.getElementById('section1LockBanner');
+      const allVisited = state.visitedUnits.size >= CONCENTRATION_UNITS_GUIDE.length;
+      const timeReady = state.sec1RemainingSeconds <= 0;
+
+      if (timeReady && allVisited) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        banner.innerHTML = `<span class="text-emerald-400 font-bold">🔓 ¡Tiempo de Sección I cumplido (7:40 AM) y 10 unidades estudiadas! Avanza a la Sección II.</span>`;
+      } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        if (!allVisited && !timeReady) {
+          banner.innerHTML = `🔒 Estudia las 10 unidades (${state.visitedUnits.size}/10) y espera a que termine el tiempo de la Sección I (${Math.ceil(state.sec1RemainingSeconds / 60)} min restantes).`;
+        } else if (!allVisited) {
+          banner.innerHTML = `📚 Tiempo cumplido. Revisa las 10 pestañas de unidades (${state.visitedUnits.size}/10) para desbloquear la Sección II.`;
+        } else {
+          banner.innerHTML = `⏳ Has revisado las 10 unidades. Repasa los ejercicios modelo hasta que el reloj llegue a 00:00 (07:40 AM).`;
+        }
+      }
+    }
+
+    function startSection2Exercises() {
+      if (state.sec1TimerInterval) clearInterval(state.sec1TimerInterval);
+      if (activeTheoryThreeCleanup) {
+        activeTheoryThreeCleanup();
+        activeTheoryThreeCleanup = null;
+      }
+      state.activityPhase = 'SECTION2_EXERCISES';
+      document.getElementById('section1TheoryScreen').classList.add('hidden');
+      document.getElementById('examScreen').classList.remove('hidden');
+      loadQuestionByIndex(0);
+      pushStudentLiveState();
+    }
+
+    /*************************************************************************
+     * 7. CÁLCULO DE NOTA Y SINCRONIZACIÓN EN VIVO CON DOCENTE.HTML
+     *************************************************************************/
+    function computeLiveGrades() {
+      const closedUnit = EXAM_CONFIG.closedTotalPoints / EXAM_CONFIG.closedCount;
+      let closedHits = 0;
+      for (let i = 0; i < EXAM_CONFIG.closedCount; i++) {
+        if (state.closedAnswers[i] !== null && state.closedAnswers[i] === CLOSED_QUESTIONS[i].correctIndex) {
+          closedHits++;
+        }
+      }
+
+      const openUnit = EXAM_CONFIG.openTotalPoints / EXAM_CONFIG.openCount;
+      let openValid = 0;
+      for (let j = 0; j < EXAM_CONFIG.openCount; j++) {
+        if (evaluateOpenAnswerQuality(state.openAnswers[j], OPEN_QUESTIONS[j].keywords).isValid) {
+          openValid++;
+        }
+      }
+
+      const closedScore = closedHits * closedUnit;
+      const openScore = openValid * openUnit;
+      const rawScore = closedScore + openScore;
+      const penaltyPts = state.totalPenalizaciones * EXAM_CONFIG.penaltyPoints;
+      const netGrade = Math.max(0.0, Math.min(5.0, rawScore - penaltyPts));
+
+      return {
+        closedHits,
+        openValid,
+        closedScore: Number(closedScore.toFixed(2)),
+        openScore: Number(openScore.toFixed(2)),
+        penaltyPts: Number(penaltyPts.toFixed(2)),
+        netGrade: Number(netGrade.toFixed(2))
+      };
+    }
+
+    // En docente.html: preguntaActual = 1 representa Sección I (Guía), y 2..11 representa los 10 ejercicios de la Sección II
+    function pushStudentLiveState() {
+      if (!state.examStarted || !db) return;
+      const grades = computeLiveGrades();
+
+      const reportedQuestionNum = state.activityPhase === 'SECTION1_THEORY'
+        ? 1
+        : (state.currentQuestionIndex + 2);
+
+      const reportedRemaining = state.activityPhase === 'SECTION1_THEORY'
+        ? state.sec1RemainingSeconds
+        : state.remainingSeconds;
+
+      const studentPayload = {
+        nombre: state.studentName,
+        grado: state.studentCourse,
+        tipoDispositivo: `${state.deviceType} (${state.activityPhase === 'SECTION1_THEORY' ? 'Sec.I Guía' : 'Sec.II Taller'})`,
+        tiempoRestante: reportedRemaining,
+        pantallaCompleta: state.pantallaCompleta,
+        examenFinalizado: state.examFinished,
+        ruidoPorcentaje: state.ruidoPorcentaje,
+        umbralRuido: state.umbralRuido,
+        sonometroActivo: state.sonometroActivo,
+        focoActivo: state.focoActivo,
+        preguntaActual: reportedQuestionNum,
+        totalPreguntas: ALL_QUESTIONS.length + 1, // 1 (Sección I) + 10 (Sección II) = 11 etapas
+        totalPenalizaciones: state.totalPenalizaciones,
+        notaCalculada: grades.netGrade.toFixed(2),
+        ultimaActividad: Date.now()
+      };
+
+      db.ref(`exams/${EXAM_CONFIG.examId}/students/${state.studentId}`).update(studentPayload).catch(() => {});
+    }
+
+    function listenToTeacherCommands() {
+      if (!db) return;
+      const cmdRef = db.ref(`exams/${EXAM_CONFIG.examId}/commands/${state.studentId}`);
+      cmdRef.on('value', snapshot => {
+        const cmd = snapshot.val();
+        if (!cmd || cmd.ejecutado === true) return;
+
+        cmdRef.update({ ejecutado: true, ejecutadoEn: Date.now() }).catch(() => {});
+
+        switch (cmd.accion) {
+          case 'DESBLOQUEAR_TIEMPO':
+            if (state.activityPhase === 'SECTION1_THEORY') {
+              state.sec1RemainingSeconds = 0;
+              CONCENTRATION_UNITS_GUIDE.forEach((_, i) => state.visitedUnits.add(i));
+              updateSection1TimerUI();
+              renderUnitTabs();
+              evaluateSection1UnlockState();
+              showToast('⚡ Sección I Desbloqueada por Docente', 'Ya puedes avanzar a la Sección II (Taller Evaluativo).', 'emerald');
+            } else {
+              state.remainingSeconds = 0;
+              updateTimerUI();
+              evaluateCurrentQuestionUnlockState();
+              showToast('⚡ Reloj Desbloqueado por el Docente', 'El temporizador fue puesto en 00:00. Ya puedes avanzar.', 'emerald');
+            }
+            break;
+
+          case 'AVANZAR_PREGUNTA':
+            if (state.activityPhase === 'SECTION1_THEORY') {
+              showToast('⏭️ Paso a Sección II Autorizado', 'El docente habilitó el ingreso inmediato al Taller Evaluativo.', 'emerald');
+              startSection2Exercises();
+            } else {
+              showToast('⏭️ Avance Autorizado por el Docente', 'Pasando inmediatamente al siguiente ejercicio.', 'emerald');
+              advanceToNextQuestion(true);
+            }
+            break;
+
+          case 'PERDONAR_PENALIZACION':
+            if (state.totalPenalizaciones > 0) {
+              state.totalPenalizaciones--;
+              state.penalties.pop();
+              updatePenaltyHeaderUI();
+              showToast('✨ Penalización Condonada (+0.5 pts)', 'El docente eliminó una falta de tu registro.', 'emerald');
+            }
+            break;
+
+          case 'FINALIZAR_EXAMEN':
+            showToast('🛑 Actividad Cerrada por el Docente', 'Entregando actividad y generando reporte...', 'red');
+            finishExamSession('Cerrado por el Docente');
+            break;
+
+          case 'MOSTRAR_ADVERTENCIA':
+            document.getElementById('remoteWarningText').textContent = cmd.mensaje || 'Mantén la concentración en tu guía de química.';
+            document.getElementById('remoteWarningModal').classList.remove('hidden');
+            break;
+
+          case 'APLICAR_PENALIZACION':
+            applyPenalty('DOCENTE', cmd.motivo || 'Sanción aplicada desde la Consola Maestra');
+            break;
+
+          case 'LIBERAR_TIEMPO_SIEMPRE':
+            state.liberarTiempoSiempre = Boolean(cmd.valor);
+            if (state.liberarTiempoSiempre) {
+              state.sec1RemainingSeconds = 0;
+              state.remainingSeconds = 0;
+              CONCENTRATION_UNITS_GUIDE.forEach((_, i) => state.visitedUnits.add(i));
+              updateSection1TimerUI();
+              evaluateSection1UnlockState();
+              updateTimerUI();
+              evaluateCurrentQuestionUnlockState();
+              showToast('🔓 Espera de Tiempo Desactivada', 'El docente liberó los tiempos de espera en tu guía.', 'emerald');
+            }
+            break;
+
+          case 'TOGGLE_SONOMETRO':
+            state.sonometroActivo = Boolean(cmd.valor);
+            if (!state.sonometroActivo) {
+              state.ruidoPorcentaje = 0;
+              document.getElementById('noisePctHeader').textContent = 'OFF';
+              document.getElementById('noiseBarHeader').style.width = '0%';
+              showToast('🔇 Sonómetro Desactivado', 'El docente apagó el monitoreo de micrófono en tu puesto.', 'emerald');
+            }
+            break;
+
+          case 'CAMBIAR_UMBRAL_RUIDO':
+            state.umbralRuido = Number(cmd.valor) || 80;
+            showToast('🎚️ Tolerancia de Ruido Ajustada', `Nuevo umbral de sonómetro configurado al ${state.umbralRuido}%.`, 'emerald');
+            break;
+
+          case 'TOGGLE_FOCO':
+            state.focoActivo = Boolean(cmd.valor);
+            if (!state.focoActivo) {
+              state.pantallaCompleta = true;
+              document.getElementById('fullscreenModal').classList.add('hidden');
+              document.getElementById('focusRuleText').textContent = 'Foco Liberado por Docente';
+              showToast('🛡️ Control de Foco Liberado', 'El docente desactivó la penalización por cambio de ventana.', 'emerald');
+            }
+            break;
+
+          case 'SALTAR_A_ABIERTAS':
+            if (state.activityPhase === 'SECTION1_THEORY') {
+              startSection2Exercises();
+            }
+            loadQuestionByIndex(EXAM_CONFIG.closedCount);
+            showToast('📝 Salto a Problemas Abiertos', 'El docente te trasladó a los problemas abiertos de desarrollo (#9).', 'emerald');
+            break;
+        }
+
+        pushStudentLiveState();
+      });
+    }
+
+    /*************************************************************************
+     * 8. NAVEGACIÓN DE LA SECCIÓN II (EJERCICIOS EVALUATIVOS)
+     *************************************************************************/
+    let activeThreeCleanup = null;
+
+    function loadQuestionByIndex(index) {
+      if (activeThreeCleanup) {
+        activeThreeCleanup();
+        activeThreeCleanup = null;
+      }
+
+      state.currentQuestionIndex = index;
+      const isClosed = index < EXAM_CONFIG.closedCount;
+      const qObj = ALL_QUESTIONS[index];
+
+      state.remainingSeconds = state.liberarTiempoSiempre
+        ? 0
+        : (isClosed ? EXAM_CONFIG.closedTimeSeconds : EXAM_CONFIG.openTimeSeconds);
+      updateTimerUI();
+
+      if (state.timerInterval) clearInterval(state.timerInterval);
+      state.timerInterval = setInterval(() => {
+        if (state.remainingSeconds > 0) {
+          state.remainingSeconds--;
+          updateTimerUI();
+          evaluateCurrentQuestionUnlockState();
+        }
+      }, 1000);
+
+      const partBadge = document.getElementById('questionPartBadge');
+      const compBadge = document.getElementById('questionCompetencyBadge');
+      const ptsBadge = document.getElementById('questionPointsBadge');
+
+      if (isClosed) {
+        partBadge.textContent = `Sección II • Ejercicio Cerrado (${index + 1} de ${EXAM_CONFIG.closedCount})`;
+        partBadge.className = 'px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-gold-500/20 text-gold-300 border border-gold-400/40';
+        ptsBadge.textContent = `Valor: ${(EXAM_CONFIG.closedTotalPoints / EXAM_CONFIG.closedCount).toFixed(3)} pts`;
+      } else {
+        const openIdx = index - EXAM_CONFIG.closedCount + 1;
+        partBadge.textContent = `Sección II • Problema Abierto (${openIdx} de ${EXAM_CONFIG.openCount})`;
+        partBadge.className = 'px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        ptsBadge.textContent = `Valor: ${(EXAM_CONFIG.openTotalPoints / EXAM_CONFIG.openCount).toFixed(2)} pts`;
+      }
+
+      compBadge.textContent = `Competencia: ${qObj.competency}`;
+      document.getElementById('questionTopicLabel').textContent = `Tema: ${qObj.topic}`;
+      document.getElementById('questionTitleLabel').textContent = `Ejercicio Práctico #${index + 1} de ${ALL_QUESTIONS.length}`;
+      document.getElementById('questionContextBox').textContent = qObj.context;
+      document.getElementById('questionStemBox').textContent = qObj.stem;
+
+      const pct = Math.round(((index + 1) / ALL_QUESTIONS.length) * 100);
+      document.getElementById('progressTextLabel').textContent = `Ejercicio ${index + 1} de ${ALL_QUESTIONS.length}`;
+      document.getElementById('progressPercentLabel').textContent = `${pct}% en curso`;
+      document.getElementById('examProgressBar').style.width = `${pct}%`;
+
+      renderQuestionVisual(qObj);
+
+      const closedContainer = document.getElementById('closedOptionsContainer');
+      const openContainer = document.getElementById('openAnswerContainer');
+
+      if (isClosed) {
+        closedContainer.classList.remove('hidden');
+        openContainer.classList.add('hidden');
+        renderClosedOptions(index, qObj);
+      } else {
+        closedContainer.classList.add('hidden');
+        openContainer.classList.remove('hidden');
+        const openIdx = index - EXAM_CONFIG.closedCount;
+        const textarea = document.getElementById('openAnswerTextarea');
+        textarea.value = state.openAnswers[openIdx] || '';
+        handleOpenTextareaInput();
+      }
+
+      document.getElementById('nextQuestionBtnText').textContent = (index === ALL_QUESTIONS.length - 1)
+        ? 'Finalizar Taller y Entregar a Consola'
+        : 'Guardar y Avanzar al Siguiente Ejercicio';
+
+      evaluateCurrentQuestionUnlockState();
+      pushStudentLiveState();
+    }
+
+    function renderClosedOptions(qIndex, qObj) {
+      const container = document.getElementById('closedOptionsContainer');
+      container.innerHTML = '';
+      const selected = state.closedAnswers[qIndex];
+
+      qObj.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = selected === optIdx;
+        btn.className = `option-btn w-full text-left p-4 rounded-2xl border border-white/15 bg-navy-900/75 text-slate-100 text-sm sm:text-[15px] leading-relaxed flex items-start gap-3 ${isSel ? 'selected' : ''}`;
+        btn.innerHTML = `
+          <span class="w-7 h-7 rounded-lg flex items-center justify-center font-extrabold text-xs shrink-0 ${isSel ? 'bg-gold-400 text-navy-900' : 'bg-navy-800 text-gold-300 border border-gold-500/30'}">
+            ${['A', 'B', 'C', 'D'][optIdx]}
+          </span>
+          <span class="flex-1">${optText.replace(/^[A-D]\.\s*/, '')}</span>
+        `;
+        btn.onclick = () => {
+          state.closedAnswers[qIndex] = optIdx;
+          renderClosedOptions(qIndex, qObj);
+          evaluateCurrentQuestionUnlockState();
+          pushStudentLiveState();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function evaluateOpenAnswerQuality(text, keywords = []) {
+      const clean = (text || '').trim();
+      if (!clean) return { isValid: false, lines: 0, words: 0, keywordHits: 0 };
+
+      const wordTokens = clean
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .match(/[a-z0-9]{1,}/g) || [];
+
+      const uniqueSet = new Set(wordTokens);
+      const charLines = Math.floor(clean.length / 65);
+      const explicitLines = clean.split(/\n+/).filter(l => l.trim().length > 20).length;
+      const effectiveLines = Math.max(charLines, explicitLines);
+
+      let keywordHits = 0;
+      const normalizedClean = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      keywords.forEach(kw => {
+        if (normalizedClean.includes(kw)) keywordHits++;
+      });
+
+      const isValid = effectiveLines >= 4 && wordTokens.length >= 28 && uniqueSet.size >= 12 && keywordHits >= 2;
+      return { isValid, lines: Math.min(effectiveLines, 10), words: wordTokens.length, keywordHits };
+    }
+
+    function handleOpenTextareaInput() {
+      const idx = state.currentQuestionIndex - EXAM_CONFIG.closedCount;
+      if (idx < 0 || idx >= EXAM_CONFIG.openCount) return;
+
+      const textarea = document.getElementById('openAnswerTextarea');
+      state.openAnswers[idx] = textarea.value;
+
+      const qObj = OPEN_QUESTIONS[idx];
+      const metrics = evaluateOpenAnswerQuality(textarea.value, qObj.keywords);
+      const badge = document.getElementById('openMetricsBadge');
+      const hint = document.getElementById('openValidationHint');
+
+      badge.textContent = `${metrics.lines} / 4 líneas | ${metrics.words} / 28 palabras | ${metrics.keywordHits} términos`;
+
+      if (metrics.isValid) {
+        badge.className = 'font-mono px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/40';
+        hint.textContent = '✅ Procedimiento y unidades verificados.';
+        hint.className = 'text-xs text-emerald-400 font-semibold';
+      } else {
+        badge.className = 'font-mono px-2.5 py-1 rounded-lg bg-red-950/80 text-red-300 border border-red-500/30';
+        hint.textContent = '⚠️ Asegúrate de escribir al menos 4 líneas (mínimo 28 palabras incluyendo tus cálculos y unidades).';
+        hint.className = 'text-xs text-amber-300';
+      }
+
+      evaluateCurrentQuestionUnlockState();
+    }
+
+    function updateTimerUI() {
+      const mins = Math.floor(state.remainingSeconds / 60);
+      const secs = state.remainingSeconds % 60;
+      const el = document.getElementById('questionTimerDisplay');
+      if (!el) return;
+      el.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function evaluateCurrentQuestionUnlockState() {
+      const idx = state.currentQuestionIndex;
+      const isClosed = idx < EXAM_CONFIG.closedCount;
+      const nextBtn = document.getElementById('nextQuestionBtn');
+      const lockBanner = document.getElementById('lockReasonBanner');
+
+      let answeredOk = false;
+      if (isClosed) {
+        answeredOk = state.closedAnswers[idx] !== null;
+      } else {
+        const openIdx = idx - EXAM_CONFIG.closedCount;
+        answeredOk = evaluateOpenAnswerQuality(state.openAnswers[openIdx], OPEN_QUESTIONS[openIdx].keywords).isValid;
+      }
+
+      const timeOk = state.remainingSeconds <= 0;
+
+      if (answeredOk && timeOk) {
+        nextBtn.disabled = false;
+        nextBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+        lockBanner.innerHTML = `<span class="text-emerald-400 font-bold">🔓 Ejercicio completado y tiempo cumplido. Puedes avanzar.</span>`;
+      } else {
+        nextBtn.disabled = true;
+        nextBtn.classList.add('opacity-40', 'cursor-not-allowed');
+        if (!answeredOk && !timeOk) {
+          lockBanner.innerHTML = `<span>🔒 Espera a que el reloj llegue a <strong>00:00</strong> y resuelve el ejercicio.</span>`;
+        } else if (!timeOk) {
+          lockBanner.innerHTML = `<span>⏳ Respuesta registrada. Espera <strong>${state.remainingSeconds} s</strong> reglamentarios para avanzar.</span>`;
+        } else {
+          lockBanner.innerHTML = `<span>✍️ Tiempo cumplido. Selecciona una opción o completa las 4 líneas del problema.</span>`;
+        }
+      }
+    }
+
+    function advanceToNextQuestion(forcedByTeacher = false) {
+      if (!forcedByTeacher && state.remainingSeconds > 0) return;
+
+      if (state.currentQuestionIndex < ALL_QUESTIONS.length - 1) {
+        loadQuestionByIndex(state.currentQuestionIndex + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        finishExamSession('Completado');
+      }
+    }
+
+    /*************************************************************************
+     * 9. VISORES 3D (THREE.JS) + LÁMINAS PNG HD EN EJERCICIOS
+     *************************************************************************/
+    function renderQuestionVisual(qObj) {
+      const threeDiv = document.getElementById('threeContainer');
+      const pngDiv = document.getElementById('pngPlateContainer');
+      const imgEl = document.getElementById('questionPlateImg');
+      document.getElementById('visualCaptionTitle').textContent = qObj.visualCaption || 'Lámina Científica HD';
+
+      if (qObj.visualType && qObj.visualType.startsWith('3D_')) {
+        threeDiv.classList.remove('hidden');
+        pngDiv.classList.add('hidden');
+        document.getElementById('visualBadgeType').textContent = 'VISOR 3D INTERACTIVO';
+        activeThreeCleanup = initThreeScene(qObj.visualType, threeDiv);
+      } else {
+        threeDiv.classList.add('hidden');
+        pngDiv.classList.remove('hidden');
+        document.getElementById('visualBadgeType').textContent = 'LÁMINA PNG HD';
+        imgEl.src = generateScientificPlatePNG(qObj.visualType);
+      }
+    }
+
+    function initThreeScene(type, container) {
+      try {
+        container.innerHTML = '<div class="absolute bottom-2 right-2 z-10 bg-navy-900/80 text-[10px] text-slate-300 px-2 py-0.5 rounded pointer-events-none">Arrastra para rotar 360°</div>';
+        const width = container.clientWidth || 340;
+        const height = container.clientHeight || 256;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+        camera.position.set(0, 0, 9.5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
+        dirLight.position.set(5, 8, 7);
+        scene.add(dirLight);
+
+        const group = new THREE.Group();
+        scene.add(group);
+        const sphereGeo = new THREE.SphereGeometry(1, 24, 24);
+
+        // Representación 3D de Iones Solvatados en un Volumen Molar
+        const caMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.25 });
+        const clMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.25 });
+        const oMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3, transparent: true, opacity: 0.85 });
+
+        const centerIon = new THREE.Mesh(sphereGeo, caMat);
+        centerIon.scale.setScalar(0.95);
+        group.add(centerIon);
+
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          const ion = new THREE.Mesh(sphereGeo, i % 2 === 0 ? clMat : oMat);
+          ion.scale.setScalar(0.55);
+          ion.position.set(Math.cos(angle) * 2.4, Math.sin(angle) * 2.0, (i % 2 === 0 ? 0.7 : -0.7));
+          group.add(ion);
+        }
+
+        let isDragging = false, prevX = 0, prevY = 0;
+        const dom = renderer.domElement;
+        dom.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+        window.addEventListener('mousemove', e => {
+          if (!isDragging) return;
+          group.rotation.y += (e.clientX - prevX) * 0.012;
+          group.rotation.x += (e.clientY - prevY) * 0.012;
+          prevX = e.clientX; prevY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        dom.addEventListener('touchstart', e => { if (e.touches[0]) { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; } }, { passive: true });
+        dom.addEventListener('touchmove', e => {
+          if (!isDragging || !e.touches[0]) return;
+          group.rotation.y += (e.touches[0].clientX - prevX) * 0.012;
+          group.rotation.x += (e.touches[0].clientY - prevY) * 0.012;
+          prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+        }, { passive: true });
+        dom.addEventListener('touchend', () => { isDragging = false; });
+
+        let animId = null;
+        function animate() {
+          animId = requestAnimationFrame(animate);
+          if (!isDragging) { group.rotation.y += 0.006; group.rotation.x += 0.002; }
+          renderer.render(scene, camera);
+        }
+        animate();
+
+        return () => {
+          if (animId) cancelAnimationFrame(animId);
+          renderer.dispose();
+        };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    /*************************************************************************
+     * 10. BANNER OFICIAL EN FORMATO PNG (CERO ERRORES CORS)
+     *************************************************************************/
+    function generateOfficialBannerDataURL() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200;
+      canvas.height = 240;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createLinearGradient(0, 0, 1200, 240);
+      grad.addColorStop(0, '#081b38');
+      grad.addColorStop(0.55, '#0f2b54');
+      grad.addColorStop(1, '#163b73');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 240);
+
+      ctx.fillStyle = '#c89d28';
+      ctx.fillRect(0, 0, 1200, 8);
+      ctx.fillRect(0, 232, 1200, 8);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(115, 120, 74, 0, Math.PI * 2);
+      ctx.fillStyle = '#081b38';
+      ctx.fill();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#dfb235';
+      ctx.stroke();
+
+      ctx.fillStyle = '#dfb235';
+      ctx.fillRect(105, 85, 20, 65);
+      ctx.beginPath();
+      ctx.moveTo(95, 85);
+      ctx.lineTo(135, 85);
+      ctx.lineTo(115, 60);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('THE LIGHTHOUSE', 115, 168);
+      ctx.fillText('SCHOOL', 115, 182);
+      ctx.restore();
+
+      ctx.fillStyle = '#dfb235';
+      ctx.font = 'bold 15px Plus Jakarta Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('MANANTIAL DE DIOS • GIMNASIO CRISTIANO FARO DE LUZ', 215, 54);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 26px Plus Jakarta Sans, sans-serif';
+      ctx.fillText('GUÍA UNIDADES FÍSICAS Y QUÍMICAS DE CONCENTRACIÓN 10°', 215, 98);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 17px Plus Jakarta Sans, sans-serif';
+      ctx.fillText('% m/m, % v/v, % m/v, ppm, ppb, Densidad, Molaridad, Molalidad, Eq-g y Normalidad', 215, 134);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '600 15px Plus Jakarta Sans, sans-serif';
+      ctx.fillText('Docente: Cristian David Ayazo | 30 Nov (7:00-7:40 AM Guía | 7:40-8:25 AM Taller)', 215, 172);
+
+      ctx.strokeStyle = 'rgba(223, 178, 53, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(965, 40, 210, 160);
+      ctx.fillStyle = '#dfb235';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('CÓDIGO: F-GA2-004', 1070, 80);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('VERSIÓN: 2', 1070, 110);
+      ctx.fillStyle = '#10b981';
+      ctx.fillText('CONSOLA ACTIVA', 1070, 140);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('30 NOV SYNC', 1070, 170);
+
+      return canvas.toDataURL('image/png');
+    }
+
+    /*************************************************************************
+     * 11. PROTOCOLO ANTIFRAUDE (PANTALLA COMPLETA, PESTAÑAS, SONÓMETRO 60%)
+     *************************************************************************/
+    function requestExamFullscreen() {
+      const elem = document.documentElement;
+      try {
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      } catch (e) {}
+    }
+
+    function resumeFullscreenMode() {
+      requestExamFullscreen();
+      state.pantallaCompleta = true;
+      document.getElementById('fullscreenModal').classList.add('hidden');
+      pushStudentLiveState();
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!state.examStarted || state.examFinished || !state.focoActivo) return;
+      if (!document.fullscreenElement) {
+        state.pantallaCompleta = false;
+        document.getElementById('fullscreenModal').classList.remove('hidden');
+        pushStudentLiveState();
+      } else {
+        state.pantallaCompleta = true;
+        pushStudentLiveState();
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!state.examStarted || state.examFinished || !state.focoActivo) return;
+      if (document.hidden) {
+        state.pantallaCompleta = false;
+        const inactiveSecs = (Date.now() - state.lastUserActivity) / 1000;
+        if (inactiveSecs <= 7.5) {
+          applyPenalty('PESTAÑA', 'Intento de cerrar o cambiar de pestaña durante la actividad.');
+        }
+        pushStudentLiveState();
+      } else {
+        state.pantallaCompleta = true;
+        pushStudentLiveState();
+      }
+    });
+
+    // Impedir cierre accidental de la pestaña durante la actividad
+    window.addEventListener('beforeunload', (e) => {
+      if (state.examStarted && !state.examFinished) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    function applyPenalty(type, reason) {
+      state.totalPenalizaciones++;
+      state.penalties.push({
+        type,
+        reason,
+        time: new Date().toLocaleTimeString('es-CO'),
+        points: EXAM_CONFIG.penaltyPoints
+      });
+      updatePenaltyHeaderUI();
+      showToast(`🚨 Penalización Aplicada (-0.5 pts)`, reason, 'red');
+      pushStudentLiveState();
+    }
+
+    function updatePenaltyHeaderUI() {
+      document.getElementById('headerPenaltiesCount').textContent = state.totalPenalizaciones;
+      document.getElementById('headerPenaltiesPts').textContent = `-${(state.totalPenalizaciones * EXAM_CONFIG.penaltyPoints).toFixed(1)}`;
+    }
+
+    function showToast(title, desc, color = 'red') {
+      const toast = document.getElementById('securityToast');
+      const tEl = document.getElementById('securityToastTitle');
+      const dEl = document.getElementById('securityToastDesc');
+      tEl.textContent = title;
+      dEl.textContent = desc;
+      toast.className = color === 'emerald'
+        ? 'fixed bottom-5 right-5 z-50 max-w-sm bg-emerald-950/95 border-2 border-emerald-400 text-emerald-100 px-4 py-3.5 rounded-2xl shadow-2xl'
+        : 'fixed bottom-5 right-5 z-50 max-w-sm bg-red-950/95 border-2 border-red-500 text-red-100 px-4 py-3.5 rounded-2xl shadow-2xl';
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    function initSoundMeter() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        setInterval(() => {
+          if (!state.examStarted || state.examFinished || !state.sonometroActivo) return;
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+          const avg = sum / dataArray.length;
+          const pct = Math.min(100, Math.round((avg / 140) * 100));
+          state.ruidoPorcentaje = pct;
+
+          const bar = document.getElementById('noiseBarHeader');
+          const lbl = document.getElementById('noisePctHeader');
+          if (bar && lbl) {
+            bar.style.width = `${pct}%`;
+            lbl.textContent = `${pct}%`;
+            bar.className = pct >= state.umbralRuido
+              ? 'h-full bg-red-500 transition-all duration-150'
+              : 'h-full bg-emerald-500 transition-all duration-150';
+          }
+
+          if (pct >= state.umbralRuido && Date.now() - state.lastNoisePenaltyTime > 12000) {
+            state.lastNoisePenaltyTime = Date.now();
+            applyPenalty('RUIDO', `Nivel de ruido ambiental (${pct}%) superó el límite permitido (${state.umbralRuido}%).`);
+          }
+        }, 500);
+      }).catch(() => {});
+    }
+
+    /*************************************************************************
+     * 12. PANEL MAESTRO DOCENTE LOCAL (CLAVES dmar2026 Y 0323)
+     *************************************************************************/
+    function openTeacherModal() {
+      document.getElementById('teacherPasswordInput').value = '';
+      document.getElementById('teacherAuthError').classList.add('hidden');
+      document.getElementById('teacherLoginView').classList.remove('hidden');
+      document.getElementById('teacherControlsView').classList.add('hidden');
+      document.getElementById('teacherModal').classList.remove('hidden');
+    }
+
+    function closeTeacherModal() {
+      document.getElementById('teacherModal').classList.add('hidden');
+    }
+
+    function verifyTeacherPassword() {
+      const val = document.getElementById('teacherPasswordInput').value.trim();
+      if (val === 'dmar2026' || val === '0323') {
+        document.getElementById('teacherLoginView').classList.add('hidden');
+        document.getElementById('teacherControlsView').classList.remove('hidden');
+      } else {
+        document.getElementById('teacherAuthError').classList.remove('hidden');
+      }
+    }
+
+    function teacherActionUnlockNow() {
+      state.teacherScheduleBypass = true;
+      if (!state.examStarted) {
+        const nameInput = document.getElementById('studentNameInput');
+        if (!nameInput.value.trim()) nameInput.value = 'Estudiante Autorizado Docente';
+        startExamSession();
+      } else if (state.activityPhase === 'SECTION1_THEORY') {
+        state.sec1RemainingSeconds = 0;
+        CONCENTRATION_UNITS_GUIDE.forEach((_, i) => state.visitedUnits.add(i));
+        updateSection1TimerUI();
+        renderUnitTabs();
+        evaluateSection1UnlockState();
+      } else {
+        state.remainingSeconds = 0;
+        updateTimerUI();
+        evaluateCurrentQuestionUnlockState();
+      }
+      closeTeacherModal();
+      pushStudentLiveState();
+    }
+
+    function teacherActionNextQuestion() {
+      state.teacherScheduleBypass = true;
+      if (!state.examStarted) {
+        teacherActionUnlockNow();
+        return;
+      }
+      closeTeacherModal();
+      if (state.activityPhase === 'SECTION1_THEORY') {
+        startSection2Exercises();
+      } else {
+        advanceToNextQuestion(true);
+      }
+    }
+
+    function teacherActionJumpToOpen() {
+      state.teacherScheduleBypass = true;
+      if (!state.examStarted) teacherActionUnlockNow();
+      closeTeacherModal();
+      if (state.activityPhase === 'SECTION1_THEORY') {
+        startSection2Exercises();
+      }
+      if (state.currentQuestionIndex < EXAM_CONFIG.closedCount) {
+        loadQuestionByIndex(EXAM_CONFIG.closedCount);
+      } else {
+        finishExamSession('Completado');
+      }
+    }
+
+    function teacherActionForceFinish() {
+      closeTeacherModal();
+      finishExamSession('Cerrado por Docente');
+    }
+
+    /*************************************************************************
+     * 13. ENTREGA FINAL EN FIREBASE (`submissions`), QR Y REPORTE PDF
+     *************************************************************************/
+    function finishExamSession(estadoTexto = 'Completado') {
+      if (state.sec1TimerInterval) clearInterval(state.sec1TimerInterval);
+      if (state.timerInterval) clearInterval(state.timerInterval);
+      if (state.syncInterval) clearInterval(state.syncInterval);
+      if (activeThreeCleanup) activeThreeCleanup();
+      if (activeTheoryThreeCleanup) activeTheoryThreeCleanup();
+
+      state.examFinished = true;
+      state.activityPhase = 'FINISHED';
+      state.endTimeISO = new Date().toISOString();
+      const grades = computeLiveGrades();
+      state.finalMetrics = grades;
+
+      pushStudentLiveState();
+
+      if (db) {
+        const submissionPayload = {
+          horaFin: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          grado: state.studentCourse,
+          asignatura: EXAM_CONFIG.subject,
+          nombreEstudiante: state.studentName,
+          notaDefinitiva: grades.netGrade.toFixed(2),
+          aciertosCerradas: grades.closedHits,
+          totalCerradas: EXAM_CONFIG.closedCount,
+          puntajeAbiertas: grades.openScore.toFixed(2),
+          puntosPenalizados: grades.penaltyPts.toFixed(2),
+          estadoEntrega: estadoTexto,
+          respuestasAbiertas: state.openAnswers,
+          timestamp: Date.now()
+        };
+        db.ref(`exams/${EXAM_CONFIG.examId}/submissions/${state.studentId}`).set(submissionPayload).catch(() => {});
+      }
+
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      document.getElementById('section1TheoryScreen').classList.add('hidden');
+      document.getElementById('examScreen').classList.add('hidden');
+      document.getElementById('fullscreenModal').classList.add('hidden');
+      document.getElementById('resultsScreen').classList.remove('hidden');
+
+      const durationSec = Math.max(1, Math.round((Date.now() - (state.startTimestamp || Date.now())) / 1000));
+      const dMin = Math.floor(durationSec / 60);
+      const dSec = durationSec % 60;
+
+      document.getElementById('resultStudentMeta').textContent =
+        `Estudiante: ${state.studentName} | Grado: ${state.studentCourse} | Actividad: ${EXAM_CONFIG.examTitle}`;
+
+      document.getElementById('finalGradeDisplay').textContent = grades.netGrade.toFixed(2);
+      const perfBadge = document.getElementById('finalPerformanceBadge');
+      if (grades.netGrade >= 4.6) {
+        perfBadge.textContent = 'Desempeño Superior';
+        perfBadge.className = 'text-xs font-bold uppercase mt-1 text-emerald-400';
+      } else if (grades.netGrade >= 4.0) {
+        perfBadge.textContent = 'Desempeño Alto';
+        perfBadge.className = 'text-xs font-bold uppercase mt-1 text-cyan-400';
+      } else if (grades.netGrade >= 3.0) {
+        perfBadge.textContent = 'Desempeño Básico';
+        perfBadge.className = 'text-xs font-bold uppercase mt-1 text-amber-300';
+      } else {
+        perfBadge.textContent = 'Desempeño Bajo';
+        perfBadge.className = 'text-xs font-bold uppercase mt-1 text-red-400';
+      }
+
+      document.getElementById('resClosedScore').textContent = `${grades.closedScore.toFixed(2)} pts`;
+      document.getElementById('resClosedHits').textContent = `${grades.closedHits} / ${EXAM_CONFIG.closedCount} aciertos`;
+      document.getElementById('resOpenScore').textContent = `${grades.openScore.toFixed(2)} pts`;
+      document.getElementById('resOpenValid').textContent = `${grades.openValid} / ${EXAM_CONFIG.openCount} válidos`;
+      document.getElementById('resPenaltyDeduction').textContent = `-${grades.penaltyPts.toFixed(2)} pts`;
+      document.getElementById('resPenaltyCount').textContent = `${state.totalPenalizaciones} incidencias`;
+      document.getElementById('resTotalTime').textContent = `${String(dMin).padStart(2, '0')}m ${String(dSec).padStart(2, '0')}s`;
+
+      try {
+        new QRious({
+          element: document.getElementById('qrCanvas'),
+          size: 160,
+          value: `FARO-LUZ|${EXAM_CONFIG.examId}|${state.studentName}|${state.studentCourse}|NOTA:${grades.netGrade.toFixed(2)}|CERRADAS:${grades.closedHits}/8|ABIERTAS:${grades.openValid}/2`
+        });
+      } catch (e) {}
+
+      const list = document.getElementById('resultsBreakdownList');
+      list.innerHTML = '';
+      CLOSED_QUESTIONS.forEach((q, idx) => {
+        const ans = state.closedAnswers[idx];
+        const ok = ans === q.correctIndex;
+        const div = document.createElement('div');
+        div.className = `p-3.5 rounded-xl border ${ok ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-red-950/30 border-red-500/30'} text-xs space-y-1`;
+        div.innerHTML = `
+          <div class="flex justify-between font-bold">
+            <span class="text-white">Ejercicio #${idx + 1}: ${q.topic}</span>
+            <span class="${ok ? 'text-emerald-400' : 'text-red-400'}">${ok ? '✓ CORRECTO' : '✕ INCORRECTO'}</span>
+          </div>
+          <p class="text-slate-300">Tu respuesta: <strong>${ans !== null ? q.options[ans] : 'Sin responder'}</strong></p>
+          <p class="text-gold-300">Respuesta correcta: <strong>${q.options[q.correctIndex]}</strong></p>
+        `;
+        list.appendChild(div);
+      });
+
+      OPEN_QUESTIONS.forEach((q, idx) => {
+        const txt = state.openAnswers[idx] || 'Sin procedimiento registrado.';
+        const ok = evaluateOpenAnswerQuality(txt, q.keywords).isValid;
+        const div = document.createElement('div');
+        div.className = `p-3.5 rounded-xl border ${ok ? 'bg-cyan-950/30 border-cyan-500/30' : 'bg-amber-950/30 border-amber-500/30'} text-xs space-y-1`;
+        div.innerHTML = `
+          <div class="flex justify-between font-bold">
+            <span class="text-white">Problema Abierto #${EXAM_CONFIG.closedCount + idx + 1}: ${q.topic}</span>
+            <span class="${ok ? 'text-cyan-300' : 'text-amber-300'}">${ok ? '✓ PROCEDIMIENTO VÁLIDO' : '⚠️ INCOMPLETO'}</span>
+          </div>
+          <p class="text-slate-200 italic bg-navy-900/80 p-2.5 rounded-lg whitespace-pre-wrap">${txt}</p>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function generateOfficialPDFReport() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const grades = state.finalMetrics || computeLiveGrades();
+
+      const drawHeader = () => {
+        try {
+          const bannerData = generateOfficialBannerDataURL();
+          doc.addImage(bannerData, 'PNG', 12, 10, 186, 36);
+        } catch (e) {}
+      };
+
+      drawHeader();
+      let y = 52;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(8, 27, 56);
+      doc.text('REPORTE OFICIAL: GUÍA UNIDADES FÍSICAS Y QUÍMICAS DE CONCENTRACIÓN 10°', 12, y);
+      y += 6;
+
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Estudiante: ${state.studentName}   |   Grado: ${state.studentCourse}   |   ID Consola: ${EXAM_CONFIG.examId}`, 12, y);
+      y += 5.5;
+      doc.setFont('helvetica', 'bold');
+      doc.text(`NOTA DEFINITIVA: ${grades.netGrade.toFixed(2)} / 5.00   (Cerradas: ${grades.closedScore.toFixed(2)} | Abiertas: ${grades.openScore.toFixed(2)} | Penalizaciones: -${grades.penaltyPts.toFixed(2)})`, 12, y);
+      y += 7;
+
+      try {
+        const plate1 = generateScientificPlatePNG('PNG_PHYSICAL_UNITS');
+        doc.addImage(plate1, 'PNG', 12, y, 88, 56);
+        const plate2 = generateScientificPlatePNG('PNG_EQUIV_NORMALITY');
+        doc.addImage(plate2, 'PNG', 106, y, 88, 56);
+        y += 61;
+      } catch (e) {}
+
+      doc.setFontSize(10.5);
+      doc.text('I. DESGLOSE DE EJERCICIOS PRÁCTICOS CERRADOS (8 EJERCICIOS)', 12, y);
+      y += 5.5;
+
+      doc.setFontSize(8.2);
+      CLOSED_QUESTIONS.forEach((q, idx) => {
+        if (y > 265) { doc.addPage(); drawHeader(); y = 52; }
+        const ans = state.closedAnswers[idx];
+        const ok = ans === q.correctIndex;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(ok ? 5 : 180, ok ? 120 : 20, ok ? 80 : 20);
+        doc.text(`Ejercicio ${idx + 1}. [${ok ? 'CORRECTO' : 'INCORRECTO'}] ${q.topic}`, 12, y);
+        y += 4.2;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(40, 40, 40);
+        const markedLines = doc.splitTextToSize(`Marcada: ${ans !== null ? q.options[ans] : 'Ninguna'}`, 184);
+        doc.text(markedLines, 14, y);
+        y += markedLines.length * 3.8;
+        const corrLines = doc.splitTextToSize(`Correcta: ${q.options[q.correctIndex]}`, 184);
+        doc.text(corrLines, 14, y);
+        y += corrLines.length * 3.8 + 2;
+      });
+
+      if (y > 240) { doc.addPage(); drawHeader(); y = 52; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(8, 27, 56);
+      doc.text('II. DESARROLLO ÍNTEGRO DE PROBLEMAS ABIERTOS (2 PROBLEMAS)', 12, y);
+      y += 5.5;
+
+      doc.setFontSize(8.5);
+      OPEN_QUESTIONS.forEach((q, idx) => {
+        if (y > 250) { doc.addPage(); drawHeader(); y = 52; }
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(8, 27, 56);
+        doc.text(`Problema Abierto #${EXAM_CONFIG.closedCount + idx + 1}: ${q.topic}`, 12, y);
+        y += 4.5;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(30, 30, 30);
+        const lines = doc.splitTextToSize(state.openAnswers[idx] || 'Sin respuesta.', 184);
+        doc.text(lines, 14, y);
+        y += lines.length * 4 + 4;
+      });
+
+      doc.save(`Reporte_Guia_Concentracion10_${state.studentName.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    /*************************************************************************
+     * 14. RELOJ EN VIVO, VIGILANCIA DE HORARIO 30 NOV Y FONDO DE PARTÍCULAS
+     *************************************************************************/
+    setInterval(() => {
+      const now = new Date();
+      const el = document.getElementById('liveClockDisplay');
+      if (el) el.textContent = now.toLocaleTimeString('es-CO', { hour12: false });
+
+      const sched = evaluateScheduleWindow();
+      const welcomeStatus = document.getElementById('welcomeScheduleStatus');
+      if (welcomeStatus) {
+        if (sched.inSection1Window) {
+          welcomeStatus.textContent = '🟢 Horario Activo: Sección I (7:00 - 7:40 AM)';
+          welcomeStatus.className = 'text-[11px] text-emerald-400 mt-1 font-mono font-bold';
+        } else if (sched.inSection2Window) {
+          welcomeStatus.textContent = '🟢 Horario Activo: Sección II (7:40 - 8:25 AM)';
+          welcomeStatus.className = 'text-[11px] text-emerald-400 mt-1 font-mono font-bold';
+        } else {
+          welcomeStatus.textContent = '🔒 Programado: 30 Nov (7:00 AM - 8:25 AM)';
+        }
+      }
+
+      // Mostrar cuenta regresiva hacia las 8:25 AM en la Sección II y auto-entregar a las 8:25 AM
+      if (state.examStarted && !state.examFinished) {
+        const rem825El = document.getElementById('section2GlobalRemaining');
+        if (rem825El) {
+          if (sched.isNov30 && !state.teacherScheduleBypass) {
+            const m = Math.floor(sched.secondsUntil825 / 60);
+            const s = sched.secondsUntil825 % 60;
+            rem825El.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            if (sched.isPastEnd) {
+              finishExamSession('Auto-envío 08:25 AM');
+            }
+          } else {
+            rem825El.textContent = 'Sesión Docente';
+          }
+        }
+      }
+    }, 1000);
+
+    (function initParticles() {
+      const canvas = document.getElementById('particlesCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+      window.addEventListener('resize', () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; });
+
+      const particles = Array.from({ length: 34 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        r: Math.random() * 2 + 1
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0 || p.x > w) p.vx *= -1;
+          if (p.y < 0 || p.y > h) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(223, 178, 53, 0.35)';
+          ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+</body>
+</html>
